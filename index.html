@@ -255,6 +255,14 @@
         color: #fff;
         box-shadow: 0 8px 24px -10px rgba(79, 140, 255, 0.9);
       }
+      .btn-danger {
+        background: linear-gradient(135deg, var(--danger), #b31f38);
+        color: #fff;
+        box-shadow: 0 8px 24px -10px rgba(255, 93, 108, 0.8);
+      }
+      .btn-danger:hover {
+        background: linear-gradient(135deg, #ff6e7c, #c82440);
+      }
       .btn-ghost {
         background: transparent;
         border-color: var(--border);
@@ -890,6 +898,53 @@
         margin-bottom: 12px;
       }
 
+      /* ---------- entry detail modal ---------- */
+      #detail-body {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-right: 4px;
+        margin-bottom: 16px;
+      }
+      .detail-row {
+        display: flex;
+        gap: 14px;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--border);
+        align-items: flex-start;
+      }
+      .detail-row:first-child {
+        padding-top: 0;
+      }
+      .detail-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .detail-label {
+        flex: none;
+        min-width: 92px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        padding-top: 6px;
+      }
+      .detail-value {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+        word-break: break-word;
+        font-size: 14px;
+        padding-top: 3px;
+      }
+      .detail-value .mono {
+        font-size: 13.5px;
+      }
+      .detail-value a {
+        word-break: break-all;
+      }
+
       /* ---------- modal ---------- */
       .modal-backdrop {
         position: fixed;
@@ -912,6 +967,11 @@
       }
       #add-field-modal {
         z-index: 80;
+      }
+      /* Confirmation dialog: no blur, only a light dim */
+      .modal-backdrop {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
       .modal {
         width: 100%;
@@ -1337,6 +1397,27 @@
                 </svg>
                 Password generator…
               </button>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                id="copy-master-quick"
+                title="Copy master password to clipboard"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="9" y="9" width="11" height="11" rx="2" />
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  />
+                </svg>
+                Copy
+              </button>
             </div>
 
             <label>
@@ -1718,6 +1799,41 @@
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             </button>
+            <button class="icon-btn" id="btn-rename" title="Rename vault file">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M4 3h9l4 4v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"
+                />
+                <path d="M13 3v4h4" />
+                <path d="M7 13h7M7 17h5" />
+              </svg>
+            </button>
+            <button
+              class="icon-btn"
+              id="btn-change-password"
+              title="Change master password"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="7.5" cy="15.5" r="3.5" />
+                <path d="M10.5 13 20 3.5" />
+                <path d="M16.5 7 19 9.5" />
+                <path d="M13.5 10 16 12.5" />
+              </svg>
+            </button>
             <button
               class="icon-btn theme-toggle"
               title="Toggle light / dark theme"
@@ -1749,7 +1865,7 @@
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             </button>
-            <button class="icon-btn" id="btn-lock" title="Lock vault">
+            <button class="icon-btn" id="btn-lock" title="Log out">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1758,8 +1874,9 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
             </button>
           </div>
@@ -1868,7 +1985,7 @@
             <span class="lbl">Password</span>
             <div class="input-row">
               <input
-                type="text"
+                type="password"
                 id="f-password"
                 maxlength="512"
                 placeholder="••••••••"
@@ -1878,9 +1995,9 @@
               />
               <button
                 type="button"
-                class="icon-btn eye-toggle is-revealed"
+                class="icon-btn eye-toggle"
                 id="toggle-f-pass"
-                title="Hide password"
+                title="Show password"
               >
                 <svg
                   class="eye-open"
@@ -1907,6 +2024,26 @@
                     d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
                   />
                   <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="icon-btn"
+                id="copy-f-pass"
+                title="Copy password"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="9" y="9" width="11" height="11" rx="2" />
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  />
                 </svg>
               </button>
             </div>
@@ -2310,6 +2447,431 @@
       </div>
     </div>
 
+    <!-- ================= RENAME FILE MODAL ================= -->
+    <div class="modal-backdrop" id="rename-modal">
+      <div class="modal" style="max-width: 460px">
+        <div class="modal-head">
+          <h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 3h9l4 4v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"
+              />
+              <path d="M13 3v4h4" />
+              <path d="M7 13h7M7 17h5" />
+            </svg>
+            Rename vault file
+          </h2>
+          <button class="icon-btn" data-close="rename-modal" title="Close">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <label>
+          <span class="lbl">File name</span>
+          <div class="input-row">
+            <input
+              type="text"
+              id="rename-input"
+              maxlength="120"
+              placeholder="my-vault.csv"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="icon-btn"
+              id="rename-quick-gen"
+              title="Generate a random name"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </button>
+          </div>
+        </label>
+
+        <div class="btn-row">
+          <button
+            type="button"
+            class="btn btn-ghost"
+            id="open-user-gen-filename"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Username generator…
+          </button>
+        </div>
+
+        <div class="small muted" style="margin: -6px 0 16px">
+          The <span class="mono">.csv</span> extension is added automatically.
+          This name is used the next time you download the vault.
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="rename-modal">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="confirm-rename">
+            Save name
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= CHANGE MASTER PASSWORD MODAL ================= -->
+    <div class="modal-backdrop" id="change-password-modal">
+      <div class="modal" style="max-width: 460px">
+        <div class="modal-head">
+          <h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="7.5" cy="15.5" r="3.5" />
+              <path d="M10.5 13 20 3.5" />
+              <path d="M16.5 7 19 9.5" />
+              <path d="M13.5 10 16 12.5" />
+            </svg>
+            Change master password
+          </h2>
+          <button
+            class="icon-btn"
+            data-close="change-password-modal"
+            title="Close"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <label>
+          <span class="lbl">New master password</span>
+          <div class="input-row">
+            <input
+              type="password"
+              id="change-password"
+              placeholder="At least 8 characters"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="icon-btn eye-toggle"
+              id="toggle-change-password"
+              title="Show password"
+            >
+              <svg
+                class="eye-open"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg
+                class="eye-closed"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </label>
+        <div class="strength"><i id="change-strength-bar"></i></div>
+        <div
+          class="small muted"
+          id="change-strength-label"
+          style="margin: 6px 0 16px"
+        >
+          Use a long, unique passphrase.
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="gen-change-quick">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            Quick generate
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            id="open-change-generator"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+              />
+            </svg>
+            Password generator…
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            id="copy-change-password"
+            title="Copy new master password to clipboard"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path
+                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              />
+            </svg>
+            Copy
+          </button>
+        </div>
+
+        <label>
+          <span class="lbl">Confirm new master password</span>
+          <div class="input-row">
+            <input
+              type="password"
+              id="change-password-2"
+              placeholder="Repeat the new master password"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="icon-btn eye-toggle"
+              id="toggle-change-password-2"
+              title="Show password"
+            >
+              <svg
+                class="eye-open"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg
+                class="eye-closed"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </label>
+
+        <div class="field-error" id="change-password-error"></div>
+
+        <p class="small muted" style="margin: 0 0 16px">
+          A brand-new AES key is derived from a fresh salt. Every entry is
+          re-encrypted the next time you download the vault — so download it
+          right after changing the password and replace the old file. The old
+          file will only open with the old password.
+        </p>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-ghost"
+            data-close="change-password-modal"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="confirm-change-password"
+          >
+            Change password
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= CONFIRM MODAL ================= -->
+    <div class="modal-backdrop" id="confirm-modal">
+      <div class="modal" style="max-width: 440px">
+        <div class="modal-head">
+          <h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span id="confirm-title-text">Are you sure?</span>
+          </h2>
+          <button class="icon-btn" data-close="confirm-modal" title="Close">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <p
+          id="confirm-message"
+          style="
+            color: var(--muted);
+            margin: 0 0 20px;
+            line-height: 1.55;
+            font-size: 14px;
+          "
+        ></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="confirm-cancel">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="confirm-ok">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ENTRY DETAIL MODAL ================= -->
+    <div class="modal-backdrop" id="detail-modal">
+      <div class="modal" style="max-width: 540px">
+        <div class="modal-head">
+          <h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span id="detail-modal-title">Entry details</span>
+          </h2>
+          <button class="icon-btn" data-close="detail-modal" title="Close">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div id="detail-body"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="detail-modal">
+            Close
+          </button>
+          <button type="button" class="btn btn-primary" id="detail-edit">
+            Edit entry
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -2578,7 +3140,32 @@
           );
         }
 
-        function downloadText(text, filename) {
+        async function downloadText(text, filename) {
+          // Preferred: File System Access API — memungkinkan deteksi Cancel
+          if (typeof window.showSaveFilePicker === "function") {
+            try {
+              const handle = await window.showSaveFilePicker({
+                suggestedName: filename,
+                types: [
+                  {
+                    description: "CSV File",
+                    accept: { "text/csv": [".csv"] },
+                  },
+                ],
+              });
+              const writable = await handle.createWritable();
+              await writable.write(text);
+              await writable.close();
+              return true; // benar-benar tersimpan
+            } catch (err) {
+              // AbortError = user menekan Cancel
+              if (err && err.name === "AbortError") return false;
+              // Error lain (mis. API diblokir) → jatuh ke fallback di bawah
+              console.warn("showSaveFilePicker gagal, pakai fallback:", err);
+            }
+          }
+
+          // Fallback: anchor download (tidak bisa mendeteksi Cancel)
           const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -2588,6 +3175,7 @@
           a.click();
           a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 1500);
+          return true;
         }
 
         /* =========================================================
@@ -3337,13 +3925,7 @@
               const subtitle =
                 [e.username, e.url].filter(Boolean).join(" · ") ||
                 "No username";
-              const isRevealed = revealed.has(e.id);
               const cfCount = (e.customFields || []).length;
-
-              const secretBlock = isRevealed
-                ? `<div class="secret">${esc(e.password || "(empty)")}</div>`
-                : "";
-              const cfBlock = isRevealed ? buildCustomFieldsView(e) : "";
               const cfChip = cfCount
                 ? `<span class="muted"> · ${cfCount} extra field${cfCount === 1 ? "" : "s"}</span>`
                 : "";
@@ -3354,8 +3936,6 @@
         <div class="entry-main">
           <div class="entry-title">${esc(e.title || "Untitled")}</div>
           <div class="entry-sub">${esc(subtitle)}${cfChip}</div>
-          ${secretBlock}
-          ${cfBlock}
         </div>
         <div class="entry-actions">
           <button class="icon-btn" data-act="copy-user" title="Copy username">
@@ -3364,12 +3944,8 @@
           <button class="icon-btn" data-act="copy-pass" title="Copy password">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
-          <button class="icon-btn" data-act="toggle" title="${isRevealed ? "Hide" : "Show"} details">
-            ${
-              isRevealed
-                ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
-                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`
-            }
+          <button class="icon-btn" data-act="view" title="View details">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
           <button class="icon-btn" data-act="edit" title="Edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -3381,6 +3957,161 @@
       </div>`;
             })
             .join("");
+        }
+
+        /* =========================================================
+   Entry detail modal
+   ========================================================= */
+        function openDetailModal(entry) {
+          $("#detail-modal-title").textContent = entry.title || "Untitled";
+          $("#detail-edit").dataset.entryId = entry.id;
+
+          const body = $("#detail-body");
+          const rows = [];
+
+          const makeRow = (label, valueHtml) => `
+      <div class="detail-row">
+        <div class="detail-label">${esc(label)}</div>
+        <div class="detail-value">${valueHtml}</div>
+      </div>`;
+
+          const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+          const eyeOpen = `<svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+          const eyeClosed = `<svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+          // Username
+          rows.push(
+            makeRow(
+              "Username",
+              entry.username
+                ? `<span class="mono">${esc(entry.username)}</span>
+                   <button type="button" class="icon-btn" data-detail-copy="username" title="Copy username">${copyIcon}</button>`
+                : `<span class="muted">(none)</span>`,
+            ),
+          );
+
+          // Password
+          rows.push(
+            makeRow(
+              "Password",
+              entry.password
+                ? `<span class="mono detail-pass" data-revealed="false">••••••••••••</span>
+                   <button type="button" class="icon-btn eye-toggle detail-pass-toggle" title="Show password">${eyeOpen}${eyeClosed}</button>
+                   <button type="button" class="icon-btn" data-detail-copy="password" title="Copy password">${copyIcon}</button>`
+                : `<span class="muted">(none)</span>`,
+            ),
+          );
+
+          // Website
+          if (entry.url) {
+            const url = String(entry.url).trim();
+            const safe = /^(https?:|mailto:|tel:)/i.test(url)
+              ? url
+              : "https://" + url;
+            rows.push(
+              makeRow(
+                "Website",
+                `<a href="${esc(safe)}" target="_blank" rel="noopener noreferrer">${esc(url)}</a>`,
+              ),
+            );
+          }
+
+          // Notes
+          if (entry.notes) {
+            rows.push(
+              makeRow(
+                "Notes",
+                `<div style="white-space:pre-wrap; font-size:13.5px">${esc(entry.notes)}</div>`,
+              ),
+            );
+          }
+
+          // Custom fields
+          (entry.customFields || []).forEach((f, i) => {
+            let vh;
+            if (f.type === "checkbox") {
+              vh = f.value ? "✓ Yes" : "✗ No";
+            } else if (f.type === "linked") {
+              const url = String(f.value || "").trim();
+              if (!url) vh = `<span class="muted">(empty)</span>`;
+              else {
+                const safe = /^(https?:|mailto:|tel:)/i.test(url)
+                  ? url
+                  : "https://" + url;
+                vh = `<a href="${esc(safe)}" target="_blank" rel="noopener noreferrer">${esc(url)}</a>`;
+              }
+            } else if (f.type === "hidden") {
+              const val = String(f.value || "");
+              if (!val) {
+                vh = `<span class="muted">(empty)</span>`;
+              } else {
+                vh = `
+                  <span class="mono detail-cf-pass" data-revealed="false" data-cf-pass-idx="${i}">••••••••••••</span>
+                  <button type="button" class="icon-btn eye-toggle detail-cf-toggle" data-cf-toggle-idx="${i}" title="Show value">${eyeOpen}${eyeClosed}</button>
+                  <button type="button" class="icon-btn" data-detail-copy-cf="${i}" title="Copy value">${copyIcon}</button>`;
+              }
+            } else {
+              vh = esc(f.value || "");
+            }
+            rows.push(makeRow(f.label || "Untitled", vh));
+          });
+
+          body.innerHTML = rows.join("");
+
+          // Copy buttons
+          body.querySelectorAll("[data-detail-copy]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const which = btn.dataset.detailCopy;
+              if (which === "username") copyText(entry.username, "Username");
+              else copyText(entry.password, "Password");
+            });
+          });
+
+          // Password reveal toggle
+          const passEl = body.querySelector(".detail-pass");
+          const passToggle = body.querySelector(".detail-pass-toggle");
+          if (passEl && passToggle) {
+            passToggle.addEventListener("click", () => {
+              const shown = passEl.dataset.revealed === "true";
+              passEl.dataset.revealed = String(!shown);
+              passEl.textContent = shown
+                ? "••••••••••••"
+                : entry.password || "(empty)";
+              passToggle.classList.toggle("is-revealed", !shown);
+              passToggle.title = !shown ? "Hide password" : "Show password";
+            });
+          }
+
+          // Hidden custom field reveal toggles
+          body.querySelectorAll("[data-cf-toggle-idx]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const idx = parseInt(btn.dataset.cfToggleIdx, 10);
+              const field = (entry.customFields || [])[idx];
+              if (!field) return;
+              const span = body.querySelector(`[data-cf-pass-idx="${idx}"]`);
+              if (!span) return;
+              const shown = span.dataset.revealed === "true";
+              span.dataset.revealed = String(!shown);
+              span.textContent = shown
+                ? "••••••••••••"
+                : String(field.value || "(empty)");
+              btn.classList.toggle("is-revealed", !shown);
+              btn.title = !shown ? "Hide value" : "Show value";
+            });
+          });
+
+          // Hidden custom field copy buttons
+          body.querySelectorAll("[data-detail-copy-cf]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const idx = parseInt(btn.dataset.detailCopyCf, 10);
+              const field = (entry.customFields || [])[idx];
+              if (!field) return;
+              copyText(String(field.value || ""), field.label || "Field value");
+            });
+          });
+
+          openModal("detail-modal");
         }
 
         /* =========================================================
@@ -3442,6 +4173,37 @@
           let s = "";
           for (let i = 0; i < len; i++) s += chars[randInt(chars.length)];
           return s;
+        }
+
+        /* =========================================================
+   Vault file name helpers
+   ========================================================= */
+        function sanitizeNamePart(s) {
+          return String(s == null ? "" : s)
+            .trim()
+            .replace(/[^A-Za-z0-9._-]+/g, "-")
+            .replace(/^[-._]+|[-._]+$/g, "")
+            .slice(0, 80);
+        }
+
+        function normalizeVaultFileName(raw) {
+          let name = String(raw == null ? "" : raw).trim();
+          name = name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "-");
+          name = name
+            .replace(/\s+/g, " ")
+            .replace(/^[.\s]+/, "")
+            .trim()
+            .slice(0, 120)
+            .trim();
+          if (!name) name = "vault";
+          if (!/\.csv$/i.test(name)) name += ".csv";
+          return name;
+        }
+
+        function generateRandomName() {
+          let w = WORDS[randInt(WORDS.length)];
+          w = w.charAt(0).toUpperCase() + w.slice(1);
+          return w + String(randInt(1000)).padStart(3, "0");
         }
 
         /* =========================================================
@@ -3579,7 +4341,10 @@
         }
 
         function openGenerator(mode) {
-          genMode = mode === "entry" || mode === "master" ? mode : "standalone";
+          genMode =
+            mode === "entry" || mode === "master" || mode === "change"
+              ? mode
+              : "standalone";
 
           if (genMode === "entry") {
             $("#gen-title-text").textContent =
@@ -3587,6 +4352,9 @@
           } else if (genMode === "master") {
             $("#gen-title-text").textContent =
               "Password generator — for master password";
+          } else if (genMode === "change") {
+            $("#gen-title-text").textContent =
+              "Password generator — new master password";
           } else {
             $("#gen-title-text").textContent = "Password generator";
           }
@@ -3613,8 +4381,11 @@
         }
 
         function openUsernameGenerator(mode) {
-          userMode = mode === "entry" ? "entry" : "standalone";
-          $("#user-use").hidden = userMode !== "entry";
+          userMode =
+            mode === "entry" || mode === "filename" ? mode : "standalone";
+          $("#user-use").hidden = userMode === "standalone";
+          $("#user-use").textContent =
+            userMode === "filename" ? "Use as file name" : "Use username";
           openModal("username-modal");
           setUserType($("#user-type").value);
         }
@@ -3723,8 +4494,8 @@
               : [];
           renderCustomFields();
 
-          // Show the password in plaintext by default, so the eye button shows "closed"
-          setPasswordVisibility($("#f-password"), $("#toggle-f-pass"), true);
+          // Keep the password masked by default
+          setPasswordVisibility($("#f-password"), $("#toggle-f-pass"), false);
 
           updateEntryStrength();
           openModal("entry-modal");
@@ -3736,6 +4507,43 @@
         }
         function closeModal(id) {
           $("#" + id).classList.remove("open");
+          // If the confirmation modal is closed without the OK button, treat it as a cancellation.
+          if (id === "confirm-modal" && confirmResolver) {
+            const r = confirmResolver;
+            confirmResolver = null;
+            r(false);
+          }
+        }
+
+        /* =========================================================
+   Confirmation dialog (replacement for window.confirm)
+   ========================================================= */
+        let confirmResolver = null;
+
+        function confirmDialog({
+          title = "Are you sure?",
+          message = "",
+          okText = "OK",
+          danger = false,
+        } = {}) {
+          return new Promise((resolve) => {
+            confirmResolver = resolve;
+            $("#confirm-title-text").textContent = title;
+            $("#confirm-message").textContent = message;
+            const okBtn = $("#confirm-ok");
+            okBtn.textContent = okText;
+            okBtn.className = "btn " + (danger ? "btn-danger" : "btn-primary");
+            openModal("confirm-modal");
+            setTimeout(() => okBtn.focus(), 80);
+          });
+        }
+
+        function resolveConfirm(value) {
+          if (!confirmResolver) return;
+          const r = confirmResolver;
+          confirmResolver = null;
+          $("#confirm-modal").classList.remove("open");
+          r(value);
         }
 
         function collectCustomFieldsFromEditor() {
@@ -3799,7 +4607,16 @@
           btn.disabled = true;
           try {
             const csv = await buildCSV();
-            downloadText(csv, state.fileName || "vault.csv");
+            const saved = await downloadText(
+              csv,
+              state.fileName || "vault.csv",
+            );
+            if (!saved) {
+              // User menekan Cancel di dialog Save As
+              updateStatus();
+              toast("Save cancelled — changes are still unsaved", "error");
+              return;
+            }
             state.dirty = false;
             updateStatus();
             toast("Encrypted vault downloaded — store it somewhere safe", "ok");
@@ -3834,6 +4651,10 @@
           $("#create-error").textContent = "";
           $("#open-error").textContent = "";
           $("#f-password").value = "";
+          $("#change-password").value = "";
+          $("#change-password-2").value = "";
+          $("#change-password-error").textContent = "";
+          $("#rename-input").value = "";
 
           setPasswordVisibility(
             $("#new-password"),
@@ -3851,7 +4672,114 @@
 
           $$(".modal-backdrop").forEach((m) => m.classList.remove("open"));
           showScreen("welcome");
-          if (!silent) toast("Vault locked", "ok");
+          if (!silent) toast("Logged out — vault cleared from memory", "ok");
+        }
+
+        /* =========================================================
+   Rename vault file
+   ========================================================= */
+        function openRenameModal() {
+          if (!state.key) return;
+          $("#rename-input").value = state.fileName || "vault.csv";
+          openModal("rename-modal");
+          setTimeout(() => {
+            const el = $("#rename-input");
+            el.focus();
+            el.select();
+          }, 100);
+        }
+
+        function applyVaultName() {
+          const name = normalizeVaultFileName($("#rename-input").value);
+          state.fileName = name;
+          $("#rename-input").value = name;
+          updateStatus();
+          closeModal("rename-modal");
+          toast("Vault file renamed to " + name, "ok");
+        }
+
+        /* =========================================================
+   Change master password
+   ========================================================= */
+        function updateChangeStrength() {
+          paintStrength(
+            $("#change-strength-bar"),
+            $("#change-strength-label"),
+            $("#change-password").value,
+            "Use a long, unique passphrase.",
+          );
+        }
+
+        function openChangePasswordModal() {
+          if (!state.key) return;
+          $("#change-password").value = "";
+          $("#change-password-2").value = "";
+          $("#change-password-error").textContent = "";
+          setPasswordVisibility(
+            $("#change-password"),
+            $("#toggle-change-password"),
+            false,
+          );
+          setPasswordVisibility(
+            $("#change-password-2"),
+            $("#toggle-change-password-2"),
+            false,
+          );
+          updateChangeStrength();
+          openModal("change-password-modal");
+          setTimeout(() => $("#change-password").focus(), 120);
+        }
+
+        async function changeMasterPassword() {
+          const errEl = $("#change-password-error");
+          errEl.textContent = "";
+
+          const pw1 = $("#change-password").value;
+          const pw2 = $("#change-password-2").value;
+
+          if (!state.key) {
+            errEl.textContent = "The vault is locked.";
+            return;
+          }
+          if (pw1.length < 8) {
+            errEl.textContent =
+              "Master password must be at least 8 characters.";
+            return;
+          }
+          if (pw1 !== pw2) {
+            errEl.textContent = "The two passwords do not match.";
+            return;
+          }
+
+          const btn = $("#confirm-change-password");
+          btn.disabled = true;
+          btn.textContent = "Re-deriving key…";
+
+          try {
+            const salt = randomBytes(16);
+            const key = await deriveKey(pw1, salt, DEFAULT_ITERATIONS);
+
+            state.key = key;
+            state.saltB64 = bufToB64(salt);
+            state.iterations = DEFAULT_ITERATIONS;
+            state.dirty = true;
+
+            $("#change-password").value = "";
+            $("#change-password-2").value = "";
+            closeModal("change-password-modal");
+            updateStatus();
+            resetLockTimer();
+            toast(
+              "Master password changed — download the vault again to apply it",
+              "ok",
+            );
+          } catch (e) {
+            console.error(e);
+            errEl.textContent = "Could not change the password: " + e.message;
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Change password";
+          }
         }
 
         /* =========================================================
@@ -3863,7 +4791,7 @@
           if (!state.key) return;
           lockTimer = setTimeout(() => {
             lockVault(true);
-            toast("Vault locked after 5 minutes of inactivity", "error");
+            toast("Logged out after 5 minutes of inactivity", "error");
           }, AUTOLOCK_MS);
         }
         ["click", "keydown", "mousemove", "touchstart", "input"].forEach((ev) =>
@@ -3891,6 +4819,15 @@
           setupPasswordToggle("new-password-2", "toggle-new-password-2");
           setupPasswordToggle("f-password", "toggle-f-pass");
 
+          $("#copy-f-pass").addEventListener("click", () => {
+            const pw = $("#f-password").value;
+            if (!pw) {
+              toast("Nothing to copy — the password is empty", "error");
+              return;
+            }
+            copyText(pw, "Password");
+          });
+
           /* --- welcome / create --- */
           $("#new-password").addEventListener("input", updateWelcomeStrength);
           updateWelcomeStrength();
@@ -3917,6 +4854,17 @@
           $("#open-master-manager").addEventListener("click", () =>
             openGenerator("master"),
           );
+          $("#copy-master-quick").addEventListener("click", () => {
+            const pw = $("#new-password").value;
+            if (!pw) {
+              toast(
+                "Nothing to copy — generate or type a password first",
+                "error",
+              );
+              return;
+            }
+            copyText(pw, "Master password");
+          });
 
           const dz = $("#dropzone");
           const fi = $("#file-input");
@@ -3956,7 +4904,21 @@
           /* --- vault toolbar --- */
           $("#btn-add").addEventListener("click", () => openEntryModal(null));
           $("#btn-save").addEventListener("click", saveVault);
-          $("#btn-lock").addEventListener("click", () => lockVault(false));
+          $("#btn-lock").addEventListener("click", async () => {
+            const ok = await confirmDialog({
+              title: "Log out of vault?",
+              message: state.dirty
+                ? "You have unsaved changes. If you log out now, those changes will be lost. Download the encrypted vault first if you want to keep them."
+                : "Your vault will be cleared from memory. You'll need your master password to unlock the file again.",
+              okText: "Log out",
+              danger: state.dirty,
+            });
+            if (ok) lockVault(false);
+          });
+          $("#btn-rename").addEventListener("click", openRenameModal);
+          $("#btn-change-password").addEventListener("click", () =>
+            openChangePasswordModal(),
+          );
           $("#search").addEventListener("input", renderEntries);
 
           $("#btn-generator").addEventListener("click", () =>
@@ -3967,7 +4929,7 @@
           );
 
           /* --- entry list (delegated) --- */
-          $("#entries").addEventListener("click", (ev) => {
+          $("#entries").addEventListener("click", async (ev) => {
             const btn = ev.target.closest("[data-act]");
             if (!btn) return;
             const card = btn.closest(".entry");
@@ -3982,31 +4944,29 @@
               case "copy-pass":
                 copyText(entry.password, "Password");
                 break;
-              case "toggle":
-                revealed.has(entry.id)
-                  ? revealed.delete(entry.id)
-                  : revealed.add(entry.id);
-                renderEntries();
+              case "view":
+                openDetailModal(entry);
                 break;
               case "edit":
                 openEntryModal(entry);
                 break;
-              case "delete":
-                if (
-                  confirm(
-                    `Delete "${entry.title || "this entry"}"?\n\nThis cannot be undone.`,
-                  )
-                ) {
-                  state.entries = state.entries.filter(
-                    (e) => e.id !== entry.id,
-                  );
-                  revealed.delete(entry.id);
-                  state.dirty = true;
-                  renderEntries();
-                  updateStatus();
-                  toast("Entry deleted", "ok");
-                }
+              case "delete": {
+                const ok = await confirmDialog({
+                  title: "Delete entry?",
+                  message: `“${entry.title || "this entry"}” will be permanently removed from your vault. This action cannot be undone.`,
+                  okText: "Delete entry",
+                  danger: true,
+                });
+                if (!ok) break;
+
+                state.entries = state.entries.filter((e) => e.id !== entry.id);
+                revealed.delete(entry.id);
+                state.dirty = true;
+                renderEntries();
+                updateStatus();
+                toast("Entry deleted", "ok");
                 break;
+              }
             }
           });
 
@@ -4028,6 +4988,75 @@
           );
           $("#open-user-gen-entry").addEventListener("click", () =>
             openUsernameGenerator("entry"),
+          );
+
+          /* --- detail modal --- */
+          $("#detail-edit").addEventListener("click", () => {
+            const id = $("#detail-edit").dataset.entryId;
+            const entry = state.entries.find((e) => e.id === id);
+            if (!entry) return;
+            closeModal("detail-modal");
+            openEntryModal(entry);
+          });
+
+          /* --- copy change-password --- */
+          $("#copy-change-password").addEventListener("click", () => {
+            const pw = $("#change-password").value;
+            if (!pw) {
+              toast(
+                "Nothing to copy — type or generate a password first",
+                "error",
+              );
+              return;
+            }
+            copyText(pw, "Master password");
+          });
+
+          /* --- rename vault file modal --- */
+          $("#rename-quick-gen").addEventListener("click", () => {
+            $("#rename-input").value = generateRandomName() + ".csv";
+          });
+          $("#open-user-gen-filename").addEventListener("click", () =>
+            openUsernameGenerator("filename"),
+          );
+          $("#confirm-rename").addEventListener("click", applyVaultName);
+          $("#rename-input").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              applyVaultName();
+            }
+          });
+
+          /* --- change master password modal --- */
+          setupPasswordToggle("change-password", "toggle-change-password");
+          setupPasswordToggle("change-password-2", "toggle-change-password-2");
+          $("#change-password").addEventListener("input", updateChangeStrength);
+          $("#gen-change-quick").addEventListener("click", () => {
+            const pw = generatePassword({ length: 24 });
+            $("#change-password").value = pw;
+            $("#change-password-2").value = pw;
+            setPasswordVisibility(
+              $("#change-password"),
+              $("#toggle-change-password"),
+              false,
+            );
+            setPasswordVisibility(
+              $("#change-password-2"),
+              $("#toggle-change-password-2"),
+              false,
+            );
+            updateChangeStrength();
+            toast(
+              "New master password generated — save it somewhere safe",
+              "ok",
+            );
+          });
+          $("#open-change-generator").addEventListener("click", () =>
+            openGenerator("change"),
+          );
+          $("#confirm-change-password").addEventListener(
+            "click",
+            changeMasterPassword,
           );
 
           /* --- add field modal --- */
@@ -4119,6 +5148,30 @@
                   $("#new-password").focus();
                 } catch (_) {}
               }, 80);
+            } else if (genMode === "change") {
+              $("#change-password").value = pw;
+              $("#change-password-2").value = pw;
+              setPasswordVisibility(
+                $("#change-password"),
+                $("#toggle-change-password"),
+                false,
+              );
+              setPasswordVisibility(
+                $("#change-password-2"),
+                $("#toggle-change-password-2"),
+                false,
+              );
+              updateChangeStrength();
+              closeModal("gen-modal");
+              toast(
+                "New master password inserted — save it somewhere safe",
+                "ok",
+              );
+              setTimeout(() => {
+                try {
+                  $("#change-password").focus();
+                } catch (_) {}
+              }, 80);
             }
           });
 
@@ -4141,6 +5194,22 @@
           $("#user-use").addEventListener("click", () => {
             const u = $("#user-output").textContent;
             if (!u || u === "…") return;
+
+            if (userMode === "filename") {
+              $("#rename-input").value =
+                (sanitizeNamePart(u) || "vault") + ".csv";
+              closeModal("username-modal");
+              toast("Name inserted", "ok");
+              setTimeout(() => {
+                try {
+                  const el = $("#rename-input");
+                  el.focus();
+                  el.select();
+                } catch (_) {}
+              }, 80);
+              return;
+            }
+
             $("#f-username").value = u;
             closeModal("username-modal");
             toast("Username inserted into the entry", "ok");
@@ -4151,6 +5220,14 @@
             }, 80);
           });
 
+          /* --- confirm modal buttons --- */
+          $("#confirm-ok").addEventListener("click", () =>
+            resolveConfirm(true),
+          );
+          $("#confirm-cancel").addEventListener("click", () =>
+            resolveConfirm(false),
+          );
+
           /* --- modal closing --- */
           document.addEventListener("click", (ev) => {
             const closer = ev.target.closest("[data-close]");
@@ -4159,14 +5236,12 @@
               return;
             }
             if (ev.target.classList.contains("modal-backdrop")) {
-              ev.target.classList.remove("open");
+              closeModal(ev.target.id);
             }
           });
           document.addEventListener("keydown", (ev) => {
             if (ev.key === "Escape") {
-              $$(".modal-backdrop.open").forEach((m) =>
-                m.classList.remove("open"),
-              );
+              $$(".modal-backdrop.open").forEach((m) => closeModal(m.id));
             }
           });
 
