@@ -401,13 +401,59 @@
         font-family: inherit;
       }
       .input-row {
-        display: flex;
-        gap: 8px;
-        align-items: stretch;
+        position: relative;
+        display: block;
       }
       .input-row input {
-        flex: 1;
-        min-width: 0;
+        width: 100%;
+        padding-right: 14px;
+      }
+      .input-row textarea {
+        padding-right: 14px;
+      }
+      /* Dynamic padding: the more buttons there are, the wider the right-hand space */
+      .input-row:has(.icon-btn:nth-last-child(4)) input {
+        padding-right: 154px;
+      }
+      .input-row:has(.icon-btn:nth-last-child(3)) input {
+        padding-right: 118px;
+      }
+      .input-row:has(.icon-btn:nth-last-child(2)) input {
+        padding-right: 82px;
+      }
+      .input-row:has(.icon-btn) input {
+        padding-right: 46px;
+      }
+      /* Floating icon button at the far right of the input */
+      .input-row .icon-btn {
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+      }
+      .input-row .icon-btn:nth-last-child(2) {
+        right: 42px;
+      }
+      .input-row .icon-btn:nth-last-child(3) {
+        right: 78px;
+      }
+      .input-row .icon-btn:nth-last-child(4) {
+        right: 114px;
+      }
+      .input-row .icon-btn:hover {
+        color: var(--text);
+        border-color: transparent;
+        background: var(--hover-bg-2);
+      }
+      .input-row .icon-btn svg {
+        width: 16px;
+        height: 16px;
       }
       .field-error {
         color: var(--danger);
@@ -736,6 +782,47 @@
         font-size: 13px;
         color: var(--muted);
       }
+      #select-all {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+        cursor: pointer;
+        margin: 0;
+        flex: none;
+      }
+      #select-all:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      .status-left {
+        display: flex;
+        align-items: center;
+        margin: 0;
+      }
+      .status-left > label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        padding: 6px 12px 6px 14px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 99px;
+        background: transparent;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          color 0.15s;
+      }
+      .status-left > label:hover {
+        background: var(--hover-bg);
+        border-color: var(--border-2);
+        color: var(--text);
+      }
       .pill {
         display: inline-flex;
         align-items: center;
@@ -822,6 +909,88 @@
         flex: none;
         flex-wrap: wrap;
         justify-content: flex-end;
+      }
+      /* ---------- selection ---------- */
+      .entry-select {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        margin: 11px 0 0 0;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+      .entry.is-selected {
+        border-color: var(--accent);
+        background: linear-gradient(
+          180deg,
+          rgba(79, 140, 255, 0.1),
+          rgba(79, 140, 255, 0.03)
+        );
+      }
+      html[data-theme="light"] .entry.is-selected {
+        background: linear-gradient(
+          180deg,
+          rgba(47, 107, 255, 0.08),
+          rgba(47, 107, 255, 0.025)
+        );
+      }
+      @media (max-width: 640px) {
+        .entry-select {
+          margin-top: 2px;
+        }
+      }
+
+      .selection-bar {
+        position: fixed;
+        left: 50%;
+        bottom: 26px;
+        transform: translate(-50%, 20px);
+        background: var(--toast-bg);
+        border: 1px solid var(--border-2);
+        border-radius: 12px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: var(--toast-shadow);
+        z-index: 55;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.22s,
+          transform 0.22s;
+        max-width: calc(100vw - 40px);
+      }
+      .selection-bar.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, 0);
+      }
+      .selection-bar .sel-count {
+        font-weight: 700;
+        font-size: 13.5px;
+        white-space: nowrap;
+        padding: 0 4px;
+      }
+      .selection-bar .sel-sep {
+        width: 1px;
+        height: 22px;
+        background: var(--border);
+        flex: none;
+      }
+      .selection-bar .btn {
+        padding: 6px 10px;
+        font-size: 13px;
+        gap: 6px;
+      }
+      .selection-bar .btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* When the action bar appears, shift the toast upwards */
+      body.has-selection .toast {
+        top: 80px;
       }
       .secret {
         margin-top: 8px;
@@ -933,10 +1102,19 @@
         display: flex;
         gap: 6px;
         align-items: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         word-break: break-word;
         font-size: 14px;
         padding-top: 3px;
+      }
+      /* The first text element fills the space, while the icon button remains at the far right */
+      .detail-value > *:first-child {
+        flex: 1;
+        min-width: 0;
+        word-break: break-word;
+      }
+      .detail-value > .icon-btn {
+        flex: none;
       }
       .detail-value .mono {
         font-size: 13.5px;
@@ -1022,13 +1200,14 @@
       }
 
       .gen-out {
+        position: relative;
         font-family: var(--mono);
         font-size: 15px;
         word-break: break-all;
         background: var(--input-bg);
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 14px 14px;
+        padding: 14px 86px 14px 14px;
         margin-bottom: 8px;
         min-height: 58px;
         max-height: 170px;
@@ -1037,6 +1216,33 @@
         align-items: center;
         justify-content: center;
         text-align: center;
+      }
+      /* Tombol mengapung di ujung kanan kotak output */
+      .gen-out .icon-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+      }
+      .gen-out .icon-btn:hover {
+        color: var(--text);
+        border-color: transparent;
+        background: var(--hover-bg-2);
+      }
+      .gen-out .icon-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+      .gen-out .icon-btn.gen-refresh-btn {
+        right: 42px;
+      }
+      .gen-out .icon-btn.gen-copy-btn {
+        right: 6px;
       }
       .gen-meta {
         text-align: center;
@@ -1064,6 +1270,27 @@
         width: 100%;
         accent-color: var(--accent);
         cursor: pointer;
+      }
+
+      .opt-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 10px 0 14px;
+      }
+      .opt-mini {
+        margin: 0;
+      }
+      .opt-mini .lbl {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .opt-mini input[type="number"] {
+        padding: 9px 12px;
+        font-size: 14px;
       }
 
       /* segmented tabs */
@@ -1196,8 +1423,8 @@
       .toast {
         position: fixed;
         left: 50%;
-        bottom: 26px;
-        transform: translate(-50%, 20px);
+        top: 80px;
+        transform: translate(-50%, -16px);
         background: var(--toast-bg);
         border: 1px solid var(--border-2);
         color: var(--text);
@@ -1352,6 +1579,63 @@
                     <line x1="1" y1="1" x2="23" y2="23" />
                   </svg>
                 </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="gen-master-quick"
+                  title="Quick generate"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="open-master-manager"
+                  title="Password generator"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                    />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="copy-master-quick"
+                  title="Copy master password"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="9" y="9" width="11" height="11" rx="2" />
+                    <path
+                      d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                    />
+                  </svg>
+                </button>
               </div>
             </label>
             <div class="strength"><i id="strength-bar"></i></div>
@@ -1361,63 +1645,6 @@
               style="margin: 6px 0 16px"
             >
               Use a long, unique passphrase.
-            </div>
-
-            <div class="btn-row">
-              <button type="button" class="btn btn-ghost" id="gen-master-quick">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="23 4 23 10 17 10" />
-                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                </svg>
-                Quick generate
-              </button>
-              <button
-                type="button"
-                class="btn btn-ghost"
-                id="open-master-manager"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-                  />
-                </svg>
-                Password generator…
-              </button>
-              <button
-                type="button"
-                class="btn btn-ghost"
-                id="copy-master-quick"
-                title="Copy master password to clipboard"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="9" y="9" width="11" height="11" rx="2" />
-                  <path
-                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                  />
-                </svg>
-                Copy
-              </button>
             </div>
 
             <label>
@@ -1638,7 +1865,14 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
           </div>
-          <h2 style="text-align: center; margin: 0 0 8px; font-size: 19px">
+          <h2
+            style="
+              text-align: center;
+              justify-content: center;
+              margin: 0 0 8px;
+              font-size: 19px;
+            "
+          >
             Unlock your vault
           </h2>
           <p class="small muted" style="text-align: center; margin: 0 0 22px">
@@ -1865,6 +2099,19 @@
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             </button>
+            <button class="icon-btn" id="btn-lock-vault" title="Lock vault">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </button>
             <button class="icon-btn" id="btn-lock" title="Log out">
               <svg
                 viewBox="0 0 24 24"
@@ -1885,8 +2132,16 @@
 
       <div class="vault-body">
         <div class="status-bar">
-          <span id="vault-info">0 entries</span>
-          <span class="pill" id="status-pill"
+          <div class="status-left">
+            <label for="select-all" title="Select all visible entries">
+              <input type="checkbox" id="select-all" />
+              <span id="vault-info">0 entries</span>
+            </label>
+          </div>
+          <span
+            class="pill"
+            id="status-pill"
+            title="All changes are written to your encrypted vault file."
             ><span class="dot"></span
             ><span id="status-text">All changes saved</span></span
           >
@@ -2046,6 +2301,43 @@
                   />
                 </svg>
               </button>
+              <button
+                type="button"
+                class="icon-btn"
+                id="gen-f-pass"
+                title="Quick generate"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="icon-btn"
+                id="open-pw-generator"
+                title="Password generator"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                  />
+                </svg>
+              </button>
             </div>
             <div class="strength" style="margin-top: 10px">
               <i id="entry-strength-bar"></i>
@@ -2058,38 +2350,6 @@
               No password yet.
             </div>
           </label>
-
-          <div class="btn-row">
-            <button type="button" class="btn btn-ghost" id="gen-f-pass">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-              </svg>
-              Quick generate
-            </button>
-            <button type="button" class="btn btn-ghost" id="open-pw-generator">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-                />
-              </svg>
-              Password generator…
-            </button>
-          </div>
 
           <label>
             <span class="lbl">Website URL</span>
@@ -2231,7 +2491,47 @@
           </button>
         </div>
 
-        <div class="gen-out" id="gen-output">…</div>
+        <div class="gen-out">
+          <span id="gen-output">…</span>
+          <button
+            type="button"
+            class="icon-btn gen-refresh-btn"
+            id="gen-refresh"
+            title="Regenerate"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="icon-btn gen-copy-btn"
+            id="gen-copy"
+            title="Copy"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path
+                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              />
+            </svg>
+          </button>
+        </div>
         <div class="gen-meta"><span id="gen-count">0</span> characters</div>
 
         <div class="seg-tabs" role="tablist">
@@ -2283,6 +2583,36 @@
             <span>Symbols (!@#$…)</span
             ><input type="checkbox" id="gen-symbols" checked />
           </div>
+
+          <div class="opt-grid-2">
+            <label class="opt-mini">
+              <span class="lbl">Minimum numbers</span>
+              <input
+                type="number"
+                id="gen-min-digits"
+                min="0"
+                max="9"
+                value="1"
+                inputmode="numeric"
+              />
+            </label>
+            <label class="opt-mini">
+              <span class="lbl">Minimum special</span>
+              <input
+                type="number"
+                id="gen-min-symbols"
+                min="0"
+                max="9"
+                value="1"
+                inputmode="numeric"
+              />
+            </label>
+          </div>
+
+          <label class="inline-check" for="gen-avoid-ambiguous">
+            <input type="checkbox" id="gen-avoid-ambiguous" checked />
+            Avoid ambiguous characters (l, I, O, 0, 1)
+          </label>
         </div>
 
         <div id="pw-panel-passphrase" hidden>
@@ -2317,23 +2647,6 @@
         </div>
 
         <div class="modal-actions" style="margin-top: 18px">
-          <button type="button" class="btn btn-ghost" id="gen-refresh">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-            Regenerate
-          </button>
-          <button type="button" class="btn btn-ghost" id="gen-copy">
-            Copy
-          </button>
           <button type="button" class="btn btn-primary" id="gen-use" hidden>
             Use password
           </button>
@@ -2373,7 +2686,47 @@
           </button>
         </div>
 
-        <div class="gen-out" id="user-output">…</div>
+        <div class="gen-out">
+          <span id="user-output">…</span>
+          <button
+            type="button"
+            class="icon-btn gen-refresh-btn"
+            id="user-refresh"
+            title="Regenerate"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="icon-btn gen-copy-btn"
+            id="user-copy"
+            title="Copy"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path
+                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              />
+            </svg>
+          </button>
+        </div>
         <div class="gen-meta"><span id="user-count">0</span> characters</div>
 
         <label>
@@ -2423,23 +2776,6 @@
         </div>
 
         <div class="modal-actions" style="margin-top: 12px">
-          <button type="button" class="btn btn-ghost" id="user-refresh">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-            Regenerate
-          </button>
-          <button type="button" class="btn btn-ghost" id="user-copy">
-            Copy
-          </button>
           <button type="button" class="btn btn-primary" id="user-use" hidden>
             Use username
           </button>
@@ -2510,29 +2846,26 @@
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
               </svg>
             </button>
+            <button
+              type="button"
+              class="icon-btn"
+              id="open-user-gen-filename"
+              title="Username generator"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
           </div>
         </label>
-
-        <div class="btn-row">
-          <button
-            type="button"
-            class="btn btn-ghost"
-            id="open-user-gen-filename"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            Username generator…
-          </button>
-        </div>
 
         <div class="small muted" style="margin: -6px 0 16px">
           The <span class="mono">.csv</span> extension is added automatically.
@@ -2630,6 +2963,63 @@
                 <line x1="1" y1="1" x2="23" y2="23" />
               </svg>
             </button>
+            <button
+              type="button"
+              class="icon-btn"
+              id="gen-change-quick"
+              title="Quick generate"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              id="open-change-generator"
+              title="Password generator"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              id="copy-change-password"
+              title="Copy new master password"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="9" width="11" height="11" rx="2" />
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                />
+              </svg>
+            </button>
           </div>
         </label>
         <div class="strength"><i id="change-strength-bar"></i></div>
@@ -2639,63 +3029,6 @@
           style="margin: 6px 0 16px"
         >
           Use a long, unique passphrase.
-        </div>
-
-        <div class="btn-row">
-          <button type="button" class="btn btn-ghost" id="gen-change-quick">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-            Quick generate
-          </button>
-          <button
-            type="button"
-            class="btn btn-ghost"
-            id="open-change-generator"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-              />
-            </svg>
-            Password generator…
-          </button>
-          <button
-            type="button"
-            class="btn btn-ghost"
-            id="copy-change-password"
-            title="Copy new master password to clipboard"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="9" y="9" width="11" height="11" rx="2" />
-              <path
-                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-              />
-            </svg>
-            Copy
-          </button>
         </div>
 
         <label>
@@ -2872,6 +3205,43 @@
       </div>
     </div>
 
+    <!-- ================= SELECTION ACTION BAR ================= -->
+    <div class="selection-bar" id="selection-bar">
+      <span class="sel-count"><span id="sel-count-num">0</span> selected</span>
+      <span class="sel-sep"></span>
+      <button type="button" class="btn btn-ghost" id="sel-clear">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+        Clear
+      </button>
+      <button type="button" class="btn btn-danger" id="sel-delete">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="3 6 5 6 21 6" />
+          <path
+            d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          />
+        </svg>
+        Delete
+      </button>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -2886,6 +3256,7 @@
         const AUTOLOCK_MS = 5 * 60 * 1000;
         const CLIPBOARD_CLEAR_MS = 30000;
         const THEME_KEY = "vaultzero-theme";
+        const SESSION_KEY = "vaultzero-session-v1";
 
         const MAX_PASSPHRASE_WORDS = 20;
         const FIELD_TYPES = ["text", "hidden", "checkbox", "linked"];
@@ -3192,6 +3563,7 @@
 
         let pending = null;
         const revealed = new Set();
+        const selected = new Set();
 
         let genMode = "standalone";
         let genPasswordMode = "random";
@@ -3648,6 +4020,7 @@
             updateWelcomeStrength();
 
             openVaultScreen();
+            persistSession();
             toast("Vault created — remember to download and back it up", "ok");
           } catch (e) {
             console.error(e);
@@ -3666,78 +4039,81 @@
           if (!file) return;
           const errEl = $("#open-error");
           errEl.textContent = "";
-
           try {
             const text = await file.text();
-            const rows = parseCSV(text);
-
-            if (rows.length < 2)
-              throw new Error("This file is empty or not a VaultZero vault.");
-
-            const header = rows[0].map((h) => h.trim().toLowerCase());
-            const col = (name) => header.indexOf(name);
-            const iType = col("type"),
-              iId = col("id"),
-              iUpd = col("updated"),
-              iIv = col("iv"),
-              iData = col("data"),
-              iSalt = col("salt"),
-              iIter = col("iterations");
-
-            if (iType < 0 || iIv < 0 || iData < 0) {
-              throw new Error(
-                "Unrecognized CSV layout. Expected VaultZero columns.",
-              );
-            }
-
-            const body = rows.slice(1);
-            const metaRow = body.find(
-              (r) => String(r[iType] || "").trim() === "meta",
-            );
-            if (!metaRow)
-              throw new Error(
-                "Vault metadata row is missing — file may be corrupted.",
-              );
-
-            const saltB64 = String(metaRow[iSalt] || "").trim();
-            const iterations =
-              parseInt(metaRow[iIter], 10) || DEFAULT_ITERATIONS;
-            if (!saltB64)
-              throw new Error("Vault salt is missing — file may be corrupted.");
-
-            const verifierIv = String(metaRow[iIv] || "").trim();
-            const verifierCt = String(metaRow[iData] || "").trim();
-            if (!verifierIv || !verifierCt)
-              throw new Error(
-                "Vault verifier is missing — file may be corrupted.",
-              );
-
-            pending = {
-              fileName: file.name || "vault.csv",
-              saltB64,
-              iterations,
-              verifierIv,
-              verifierCt,
-              rows: body
-                .filter((r) => String(r[iType] || "").trim() === "entry")
-                .map((r) => ({
-                  id: String(r[iId] || "").trim(),
-                  updated: String(r[iUpd] || "").trim(),
-                  iv: String(r[iIv] || "").trim(),
-                  ct: String(r[iData] || "").trim(),
-                }))
-                .filter((r) => r.iv && r.ct),
-            };
-
-            $("#unlock-filename").textContent = pending.fileName;
-            $("#unlock-password").value = "";
-            $("#unlock-error").textContent = "";
-            showScreen("unlock");
-            setTimeout(() => $("#unlock-password").focus(), 120);
+            await prepareVaultFromCSV(text, file.name || "vault.csv", false);
           } catch (e) {
             console.error(e);
             errEl.textContent = e.message;
           }
+        }
+
+        async function prepareVaultFromCSV(text, fileName, wasDirty) {
+          const rows = parseCSV(text);
+
+          if (rows.length < 2)
+            throw new Error("This file is empty or not a VaultZero vault.");
+
+          const header = rows[0].map((h) => h.trim().toLowerCase());
+          const col = (name) => header.indexOf(name);
+          const iType = col("type"),
+            iId = col("id"),
+            iUpd = col("updated"),
+            iIv = col("iv"),
+            iData = col("data"),
+            iSalt = col("salt"),
+            iIter = col("iterations");
+
+          if (iType < 0 || iIv < 0 || iData < 0) {
+            throw new Error(
+              "Unrecognized CSV layout. Expected VaultZero columns.",
+            );
+          }
+
+          const body = rows.slice(1);
+          const metaRow = body.find(
+            (r) => String(r[iType] || "").trim() === "meta",
+          );
+          if (!metaRow)
+            throw new Error(
+              "Vault metadata row is missing — file may be corrupted.",
+            );
+
+          const saltB64 = String(metaRow[iSalt] || "").trim();
+          const iterations = parseInt(metaRow[iIter], 10) || DEFAULT_ITERATIONS;
+          if (!saltB64)
+            throw new Error("Vault salt is missing — file may be corrupted.");
+
+          const verifierIv = String(metaRow[iIv] || "").trim();
+          const verifierCt = String(metaRow[iData] || "").trim();
+          if (!verifierIv || !verifierCt)
+            throw new Error(
+              "Vault verifier is missing — file may be corrupted.",
+            );
+
+          pending = {
+            fileName: fileName || "vault.csv",
+            saltB64,
+            iterations,
+            verifierIv,
+            verifierCt,
+            wasDirty: !!wasDirty,
+            rows: body
+              .filter((r) => String(r[iType] || "").trim() === "entry")
+              .map((r) => ({
+                id: String(r[iId] || "").trim(),
+                updated: String(r[iUpd] || "").trim(),
+                iv: String(r[iIv] || "").trim(),
+                ct: String(r[iData] || "").trim(),
+              }))
+              .filter((r) => r.iv && r.ct),
+          };
+
+          $("#unlock-filename").textContent = pending.fileName;
+          $("#unlock-password").value = "";
+          $("#unlock-error").textContent = "";
+          showScreen("unlock");
+          setTimeout(() => $("#unlock-password").focus(), 120);
         }
 
         async function unlockVault() {
@@ -3803,13 +4179,19 @@
               iterations: pending.iterations,
               entries,
               fileName: pending.fileName,
-              dirty: false,
+              dirty: pending.wasDirty === true,
             };
+            const restoredDirty = pending.wasDirty === true;
             pending = null;
             revealed.clear();
             $("#unlock-password").value = "";
 
             openVaultScreen();
+            persistSession();
+            if (restoredDirty) {
+              // Status akan tetap "Unsaved changes" setelah unlock
+              updateStatus();
+            }
             toast(
               skipped
                 ? `Vault unlocked — ${skipped} unreadable row(s) skipped`
@@ -3845,9 +4227,13 @@
           if (state.dirty) {
             pill.classList.add("dirty");
             txt.textContent = "Unsaved changes";
+            pill.title =
+              "Your latest changes are only in memory. Click the download icon (top-right) to save them to an encrypted file.";
           } else {
             pill.classList.remove("dirty");
             txt.textContent = "All changes saved";
+            pill.title =
+              "All changes have been written to your encrypted vault file.";
           }
         }
 
@@ -3888,6 +4274,15 @@
         }
 
         function renderEntries() {
+          // Sort by title (A → Z)
+          state.entries.sort((a, b) =>
+            String(a.title || "").localeCompare(
+              String(b.title || ""),
+              undefined,
+              { sensitivity: "base" },
+            ),
+          );
+
           const q = ($("#search").value || "").trim().toLowerCase();
           const list = state.entries.filter((e) => {
             if (!q) return true;
@@ -3913,6 +4308,8 @@
             empty.querySelector(".small").innerHTML = state.entries.length
               ? "Try a different search term."
               : "Click <strong>Add</strong> to store your first credential.";
+            updateSelectionBar();
+            updateSelectAll([]);
             return;
           }
 
@@ -3930,8 +4327,11 @@
                 ? `<span class="muted"> · ${cfCount} extra field${cfCount === 1 ? "" : "s"}</span>`
                 : "";
 
+              const isSelected = selected.has(e.id);
+
               return `
-      <div class="entry" data-id="${esc(e.id)}">
+      <div class="entry${isSelected ? " is-selected" : ""}" data-id="${esc(e.id)}">
+        <input type="checkbox" class="entry-select" data-select-id="${esc(e.id)}" ${isSelected ? "checked" : ""} aria-label="Select entry">
         <div class="avatar">${esc(initial)}</div>
         <div class="entry-main">
           <div class="entry-title">${esc(e.title || "Untitled")}</div>
@@ -3957,6 +4357,67 @@
       </div>`;
             })
             .join("");
+
+          updateSelectionBar();
+          updateSelectAll(list);
+        }
+
+        /* =========================================================
+   Selection
+   ========================================================= */
+        function updateSelectionBar() {
+          const n = selected.size;
+          $("#sel-count-num").textContent = n;
+          $("#selection-bar").classList.toggle("show", n > 0);
+          document.body.classList.toggle("has-selection", n > 0);
+        }
+
+        function updateSelectAll(visibleList) {
+          const cb = $("#select-all");
+          if (!cb) return;
+          const total = visibleList.length;
+          const selCount = visibleList.filter((e) => selected.has(e.id)).length;
+          cb.disabled = total === 0;
+          cb.checked = total > 0 && selCount === total;
+          cb.indeterminate = selCount > 0 && selCount < total;
+        }
+
+        function getVisibleEntries() {
+          const q = ($("#search").value || "").trim().toLowerCase();
+          return state.entries.filter((e) => {
+            if (!q) return true;
+            const cfText = (e.customFields || [])
+              .map((f) => `${f.label} ${f.value}`)
+              .join(" ");
+            return [e.title, e.username, e.url, e.notes, cfText].some((v) =>
+              String(v || "")
+                .toLowerCase()
+                .includes(q),
+            );
+          });
+        }
+
+        async function deleteSelected() {
+          const n = selected.size;
+          if (!n) return;
+          const ok = await confirmDialog({
+            title: "Delete selected entries?",
+            message: `${n} ${n === 1 ? "entry" : "entries"} will be permanently removed from your vault. This action cannot be undone.`,
+            okText: `Delete ${n}`,
+            danger: true,
+          });
+          if (!ok) return;
+
+          const ids = new Set(selected);
+          state.entries = state.entries.filter((e) => !ids.has(e.id));
+          ids.forEach((id) => revealed.delete(id));
+          selected.clear();
+          state.dirty = true;
+          renderEntries();
+          updateStatus();
+          persistSession();
+          updateSelectionBar();
+          toast(`${n} ${n === 1 ? "entry" : "entries"} deleted`, "ok");
         }
 
         /* =========================================================
@@ -4149,11 +4610,10 @@
             ok ? "ok" : "error",
           );
 
-          if (ok && navigator.clipboard && navigator.clipboard.readText) {
+          if (ok) {
             setTimeout(async () => {
               try {
-                const current = await navigator.clipboard.readText();
-                if (current === text) await navigator.clipboard.writeText("");
+                await navigator.clipboard.writeText("");
               } catch (_) {}
             }, CLIPBOARD_CLEAR_MS);
           }
@@ -4200,6 +4660,53 @@
           return name;
         }
 
+        /* =========================================================
+   Session persistence — vault tetap terbuka setelah refresh
+   ========================================================= */
+        function saveSession(csvText, fileName, wasDirty) {
+          try {
+            sessionStorage.setItem(
+              SESSION_KEY,
+              JSON.stringify({
+                csvText,
+                fileName,
+                wasDirty: !!wasDirty,
+              }),
+            );
+          } catch (_) {}
+        }
+
+        function clearSession() {
+          try {
+            sessionStorage.removeItem(SESSION_KEY);
+          } catch (_) {}
+        }
+
+        function loadSession() {
+          try {
+            const raw = sessionStorage.getItem(SESSION_KEY);
+            if (!raw) return null;
+            const obj = JSON.parse(raw);
+            if (!obj || !obj.csvText) return null;
+            return obj;
+          } catch (_) {
+            return null;
+          }
+        }
+
+        let persistTimer = null;
+        function persistSession() {
+          if (!state.key) return;
+          clearTimeout(persistTimer);
+          persistTimer = setTimeout(async () => {
+            if (!state.key) return;
+            try {
+              const csv = await buildCSV();
+              saveSession(csv, state.fileName, state.dirty);
+            } catch (_) {}
+          }, 300);
+        }
+
         function generateRandomName() {
           let w = WORDS[randInt(WORDS.length)];
           w = w.charAt(0).toUpperCase() + w.slice(1);
@@ -4210,10 +4717,18 @@
    Password generator
    ========================================================= */
         const CHARSETS = {
-          lower: "abcdefghijkmnopqrstuvwxyz",
-          upper: "ABCDEFGHJKLMNPQRSTUVWXYZ",
-          digits: "23456789",
-          symbols: "!@#$%^&*()-_=+[]{};:,.?/",
+          safe: {
+            lower: "abcdefghijkmnopqrstuvwxyz",
+            upper: "ABCDEFGHJKLMNPQRSTUVWXYZ",
+            digits: "23456789",
+            symbols: "!@#$%^&*()-_=+[]{};:,.?/",
+          },
+          full: {
+            lower: "abcdefghijklmnopqrstuvwxyz",
+            upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            digits: "0123456789",
+            symbols: "!@#$%^&*()-_=+[]{};:,.?/",
+          },
         };
 
         function generatePassword({
@@ -4222,20 +4737,50 @@
           upper = true,
           digits = true,
           symbols = true,
+          minDigits = 1,
+          minSymbols = 1,
+          avoidAmbiguous = true,
         } = {}) {
           length = Math.max(4, Math.min(128, length | 0));
 
+          const cs = avoidAmbiguous ? CHARSETS.safe : CHARSETS.full;
+
           const sets = [];
-          if (lower) sets.push(CHARSETS.lower);
-          if (upper) sets.push(CHARSETS.upper);
-          if (digits) sets.push(CHARSETS.digits);
-          if (symbols) sets.push(CHARSETS.symbols);
-          if (!sets.length) sets.push(CHARSETS.lower);
+          if (lower) sets.push(cs.lower);
+          if (upper) sets.push(cs.upper);
+          if (digits) sets.push(cs.digits);
+          if (symbols) sets.push(cs.symbols);
+          if (!sets.length) sets.push(cs.lower);
 
           const all = sets.join("");
+
+          // Mulai dengan satu dari tiap set yang aktif
           const chars = sets.map((s) => s[randInt(s.length)]);
+
+          // Pastikan jumlah minimum angka (maks 9)
+          if (digits) {
+            const md = Math.min(Math.max(0, minDigits | 0), 9, length);
+            let have = chars.filter((c) => cs.digits.includes(c)).length;
+            while (have < md && chars.length < length) {
+              chars.push(cs.digits[randInt(cs.digits.length)]);
+              have++;
+            }
+          }
+
+          // Pastikan jumlah minimum simbol (maks 9)
+          if (symbols) {
+            const ms = Math.min(Math.max(0, minSymbols | 0), 9, length);
+            let have = chars.filter((c) => cs.symbols.includes(c)).length;
+            while (have < ms && chars.length < length) {
+              chars.push(cs.symbols[randInt(cs.symbols.length)]);
+              have++;
+            }
+          }
+
+          // Isi sisanya dari semua charset
           while (chars.length < length) chars.push(all[randInt(all.length)]);
 
+          // Fisher-Yates shuffle
           for (let i = chars.length - 1; i > 0; i--) {
             const j = randInt(i + 1);
             [chars[i], chars[j]] = [chars[j], chars[i]];
@@ -4304,6 +4849,9 @@
             upper: $("#gen-upper").checked,
             digits: $("#gen-digits").checked,
             symbols: $("#gen-symbols").checked,
+            minDigits: parseInt($("#gen-min-digits").value, 10) || 0,
+            minSymbols: parseInt($("#gen-min-symbols").value, 10) || 0,
+            avoidAmbiguous: $("#gen-avoid-ambiguous").checked,
           };
         }
 
@@ -4595,6 +5143,7 @@
           closeModal("entry-modal");
           renderEntries();
           updateStatus();
+          persistSession();
           resetLockTimer();
         }
 
@@ -4640,7 +5189,9 @@
           };
           pending = null;
           revealed.clear();
+          selected.clear();
           editingCustomFields = [];
+          updateSelectionBar();
 
           $("#search").value = "";
           $("#entries").innerHTML = "";
@@ -4670,6 +5221,7 @@
           updateWelcomeStrength();
           updateEntryStrength();
 
+          clearSession();
           $$(".modal-backdrop").forEach((m) => m.classList.remove("open"));
           showScreen("welcome");
           if (!silent) toast("Logged out — vault cleared from memory", "ok");
@@ -4694,6 +5246,7 @@
           state.fileName = name;
           $("#rename-input").value = name;
           updateStatus();
+          persistSession();
           closeModal("rename-modal");
           toast("Vault file renamed to " + name, "ok");
         }
@@ -4768,6 +5321,7 @@
             $("#change-password-2").value = "";
             closeModal("change-password-modal");
             updateStatus();
+            persistSession();
             resetLockTimer();
             toast(
               "Master password changed — download the vault again to apply it",
@@ -4779,6 +5333,79 @@
           } finally {
             btn.disabled = false;
             btn.textContent = "Change password";
+          }
+        }
+
+        /* =========================================================
+   Lock vault
+   ========================================================= */
+        async function lockVaultKeepFile() {
+          if (!state.key) return;
+          const fileName = state.fileName;
+          const wasDirty = state.dirty;
+
+          // Snapshot terenkripsi sebelum memory dibersihkan
+          let csvText;
+          try {
+            csvText = await buildCSV();
+          } catch (e) {
+            toast("Could not lock vault: " + e.message, "error");
+            return;
+          }
+
+          // Bersihkan memory & UI (mirip lockVault, tapi tanpa clearSession)
+          clearTimeout(lockTimer);
+          state = {
+            key: null,
+            saltB64: null,
+            iterations: DEFAULT_ITERATIONS,
+            entries: [],
+            fileName: "vault.csv",
+            dirty: false,
+          };
+          pending = null;
+          revealed.clear();
+          selected.clear();
+          editingCustomFields = [];
+          updateSelectionBar();
+
+          $("#search").value = "";
+          $("#entries").innerHTML = "";
+          $("#empty-state").hidden = true;
+          $("#new-password").value = "";
+          $("#new-password-2").value = "";
+          $("#unlock-password").value = "";
+          $("#create-error").textContent = "";
+          $("#open-error").textContent = "";
+          $("#f-password").value = "";
+
+          setPasswordVisibility(
+            $("#new-password"),
+            $("#toggle-new-password"),
+            false,
+          );
+          setPasswordVisibility(
+            $("#new-password-2"),
+            $("#toggle-new-password-2"),
+            false,
+          );
+
+          updateWelcomeStrength();
+          updateEntryStrength();
+
+          $$(".modal-backdrop").forEach((m) => m.classList.remove("open"));
+
+          // Simpan session agar tahan refresh
+          saveSession(csvText, fileName, wasDirty);
+
+          // Langsung arahkan ke layar unlock untuk file yang sama
+          try {
+            await prepareVaultFromCSV(csvText, fileName, wasDirty);
+            toast("Vault locked — enter your master password to resume", "ok");
+          } catch (e) {
+            clearSession();
+            showScreen("welcome");
+            toast("Vault locked", "ok");
           }
         }
 
@@ -4807,6 +5434,16 @@
               "Web Crypto API is unavailable.\n\nPlease open this page over HTTPS, on localhost, or in a modern browser — encryption cannot run without it.",
             );
             return;
+          }
+
+          /* --- restore session (jangan logout paksa saat refresh) --- */
+          const sess = loadSession();
+          if (sess && sess.csvText) {
+            prepareVaultFromCSV(
+              sess.csvText,
+              sess.fileName,
+              sess.wasDirty,
+            ).catch(() => clearSession());
           }
 
           /* --- theme --- */
@@ -4898,12 +5535,16 @@
           });
           $("#btn-back-welcome").addEventListener("click", () => {
             pending = null;
+            clearSession();
             showScreen("welcome");
           });
 
           /* --- vault toolbar --- */
           $("#btn-add").addEventListener("click", () => openEntryModal(null));
           $("#btn-save").addEventListener("click", saveVault);
+          $("#btn-lock-vault").addEventListener("click", () => {
+            lockVaultKeepFile();
+          });
           $("#btn-lock").addEventListener("click", async () => {
             const ok = await confirmDialog({
               title: "Log out of vault?",
@@ -4961,14 +5602,49 @@
 
                 state.entries = state.entries.filter((e) => e.id !== entry.id);
                 revealed.delete(entry.id);
+                selected.delete(entry.id);
                 state.dirty = true;
                 renderEntries();
                 updateStatus();
+                persistSession();
+                updateSelectionBar();
                 toast("Entry deleted", "ok");
                 break;
               }
             }
           });
+
+          /* --- selection checkboxes --- */
+          $("#entries").addEventListener("change", (ev) => {
+            const cb = ev.target.closest(".entry-select");
+            if (!cb) return;
+            const id = cb.dataset.selectId;
+            if (!id) return;
+            if (cb.checked) selected.add(id);
+            else selected.delete(id);
+            const card = cb.closest(".entry");
+            if (card) card.classList.toggle("is-selected", cb.checked);
+            updateSelectionBar();
+          });
+
+          $("#select-all").addEventListener("change", (ev) => {
+            const visibleList = getVisibleEntries();
+            if (ev.target.checked) {
+              visibleList.forEach((e) => selected.add(e.id));
+            } else {
+              visibleList.forEach((e) => selected.delete(e.id));
+            }
+            renderEntries();
+            updateSelectionBar();
+          });
+
+          $("#sel-clear").addEventListener("click", () => {
+            selected.clear();
+            renderEntries();
+            updateSelectionBar();
+          });
+
+          $("#sel-delete").addEventListener("click", deleteSelected);
 
           /* --- entry form --- */
           $("#entry-form").addEventListener("submit", saveEntryFromForm);
@@ -4978,7 +5654,7 @@
           $("#gen-f-pass").addEventListener("click", () => {
             const pw = generatePassword({ length: 20 });
             $("#f-password").value = pw;
-            setPasswordVisibility($("#f-password"), $("#toggle-f-pass"), true);
+            setPasswordVisibility($("#f-password"), $("#toggle-f-pass"), false);
             updateEntryStrength();
             toast("Strong password generated", "ok");
           });
@@ -5101,6 +5777,38 @@
           ["gen-upper", "gen-lower", "gen-digits", "gen-symbols"].forEach(
             (id) => $("#" + id).addEventListener("change", refreshGenerator),
           );
+          $("#gen-avoid-ambiguous").addEventListener(
+            "change",
+            refreshGenerator,
+          );
+          const clampMin = (el) => {
+            const v = parseInt(el.value, 10);
+            if (isNaN(v) || v < 0) el.value = 0;
+            else if (v > 9) el.value = 9;
+          };
+          $("#gen-min-digits").addEventListener("input", () => {
+            clampMin($("#gen-min-digits"));
+            refreshGenerator();
+          });
+          $("#gen-min-symbols").addEventListener("input", () => {
+            clampMin($("#gen-min-symbols"));
+            refreshGenerator();
+          });
+
+          // Disable / enable input minimum sesuai checkbox kategori
+          const syncMinInputs = () => {
+            const d = $("#gen-digits").checked;
+            const s = $("#gen-symbols").checked;
+            const md = $("#gen-min-digits");
+            const ms = $("#gen-min-symbols");
+            md.disabled = !d;
+            ms.disabled = !s;
+            if (!d) md.value = 0;
+            if (!s) ms.value = 0;
+          };
+          $("#gen-digits").addEventListener("change", syncMinInputs);
+          $("#gen-symbols").addEventListener("change", syncMinInputs);
+          syncMinInputs();
 
           $("#gen-copy").addEventListener("click", () =>
             copyText($("#gen-output").textContent, "Password"),
@@ -5116,7 +5824,7 @@
               setPasswordVisibility(
                 $("#f-password"),
                 $("#toggle-f-pass"),
-                true,
+                false,
               );
               updateEntryStrength();
               closeModal("gen-modal");
