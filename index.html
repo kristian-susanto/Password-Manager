@@ -1512,6 +1512,212 @@
         font-size: 12.5px;
         line-height: 1.4;
       }
+
+      /* ============================================================
+   RESPONSIVE POLISH — mobile & small screens
+   ============================================================ */
+
+      /* ---- Tablet / narrow widths (≤ 720px): restructure topbar ---- */
+      @media (max-width: 720px) {
+        .topbar-inner {
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 10px 14px;
+        }
+        .topbar .brand {
+          order: 1;
+          flex: 0 0 auto;
+        }
+        .search-box {
+          order: 2;
+          flex: 1 1 100px;
+          min-width: 0; /* allow it to shrink below 170px */
+        }
+        .topbar-actions {
+          order: 3;
+          flex: 1 1 100%; /* force onto its own row */
+          flex-wrap: nowrap;
+          overflow-x: auto; /* horizontal scroll for the toolbar */
+          overflow-y: hidden;
+          padding-bottom: 2px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .topbar-actions::-webkit-scrollbar {
+          display: none;
+        }
+        .topbar-actions > * {
+          flex: 0 0 auto;
+        }
+      }
+
+      /* ---- Phone (≤ 640px) ---- */
+      @media (max-width: 640px) {
+        /* Container paddings */
+        .wrap {
+          padding: 0 14px;
+        }
+        .vault-body {
+          padding: 18px 14px 96px;
+        }
+        .center-card {
+          padding: 32px 14px 40px;
+        }
+
+        /* Hero + brand */
+        .hero {
+          padding: 32px 0 22px;
+        }
+        .hero h1 {
+          letter-spacing: -0.4px;
+        }
+        .brand {
+          font-size: 17px;
+        }
+
+        /* Cards & dropzone */
+        .card {
+          padding: 20px 16px;
+          border-radius: 14px;
+        }
+        .dropzone {
+          padding: 22px 14px;
+        }
+        .empty {
+          padding: 44px 16px;
+        }
+
+        /* Compact topbar buttons */
+        .topbar-actions .btn {
+          padding: 8px 12px;
+          font-size: 13px;
+        }
+        .topbar-actions .icon-btn {
+          width: 32px;
+          height: 32px;
+        }
+
+        /* Status bar */
+        .status-bar {
+          gap: 8px;
+        }
+        .status-left {
+          flex: 1 1 auto;
+          min-width: 0;
+        }
+        .status-left > label {
+          max-width: 100%;
+          padding: 5px 10px 5px 12px;
+        }
+        #vault-info {
+          display: block;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        /* Entry cards */
+        .entry {
+          padding: 12px;
+          gap: 10px;
+        }
+        .avatar {
+          width: 36px;
+          height: 36px;
+          font-size: 15px;
+          border-radius: 10px;
+        }
+        .entry-actions {
+          gap: 4px;
+          padding-top: 8px;
+        }
+
+        /* Modals */
+        .modal-backdrop {
+          padding: 12px;
+        }
+        .modal {
+          padding: 18px 16px;
+          border-radius: 14px;
+        }
+
+        /* Detail rows: stack label above value */
+        .detail-row {
+          flex-direction: column;
+          gap: 4px;
+          padding: 10px 0;
+        }
+        .detail-label {
+          min-width: 0;
+          padding-top: 0;
+          font-size: 12px;
+        }
+        .detail-value {
+          padding-top: 0;
+        }
+
+        /* Selection bar → full-width footer style */
+        .selection-bar {
+          left: 12px;
+          right: 12px;
+          bottom: 12px;
+          transform: translateY(120%);
+          max-width: none;
+          justify-content: center;
+          flex-wrap: wrap;
+          padding: 10px;
+        }
+        .selection-bar.show {
+          transform: translateY(0);
+        }
+
+        /* Toast below the taller topbar */
+        .toast {
+          top: 110px;
+        }
+        body.has-selection .toast {
+          top: 110px;
+        }
+
+        /* Generator output */
+        .gen-out {
+          padding: 12px 76px 12px 12px;
+          font-size: 14px;
+        }
+
+        /* Custom-field rows */
+        .cf-row {
+          gap: 6px;
+          padding: 10px;
+        }
+
+        /* Save-format buttons */
+        .save-format-btn {
+          padding: 12px;
+          gap: 12px;
+        }
+        .save-format-icon {
+          width: 42px;
+          height: 42px;
+          font-size: 12px;
+        }
+      }
+
+      /* ---- Very small phones (≤ 400px) ---- */
+      @media (max-width: 400px) {
+        .topbar-actions .btn {
+          padding: 7px 10px;
+          font-size: 12.5px;
+        }
+        .topbar-actions .icon-btn {
+          width: 30px;
+          height: 30px;
+        }
+        .modal-actions .btn {
+          flex: 1 1 auto;
+        }
+      }
     </style>
   </head>
   <body>
