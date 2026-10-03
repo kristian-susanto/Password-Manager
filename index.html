@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="color-scheme" content="dark light" />
-    <title>VaultZero — Zero-Knowledge Password Manager</title>
+    <title>Umbra — Zero-Knowledge Password Manager</title>
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>"
@@ -15,7 +15,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("vaultzero-theme");
+          var t = localStorage.getItem("umbra-theme");
           if (t !== "light" && t !== "dark") {
             t =
               window.matchMedia &&
@@ -1452,6 +1452,66 @@
       .toast.error {
         border-color: rgba(255, 93, 108, 0.55);
       }
+
+      /* ---------- save format modal ---------- */
+      .save-format-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .save-format-btn {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input-bg);
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          transform 0.12s;
+      }
+      .save-format-btn:hover {
+        border-color: var(--accent);
+        background: var(--hover-bg);
+        transform: translateY(-1px);
+      }
+      .save-format-btn:active {
+        transform: translateY(0);
+      }
+      .save-format-icon {
+        flex: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      }
+      .save-format-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+      .save-format-info strong {
+        font-size: 14.5px;
+      }
+      .save-format-info small {
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.4;
+      }
     </style>
   </head>
   <body>
@@ -1505,14 +1565,14 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </span>
-            VaultZero
+            Umbra
           </div>
           <h1>Passwords encrypted before they ever touch the disk.</h1>
           <p>
             Zero-knowledge, file-based password manager. Your entire vault lives
-            in a single CSV file — every field sealed with AES-256-GCM using a
-            key derived from your master password. Nothing is uploaded, nothing
-            is synced, no server ever sees your data.
+            in a single CSV or JSON file — every field sealed with AES-256-GCM
+            using a key derived from your master password. Nothing is uploaded,
+            nothing is synced, no server ever sees your data.
           </p>
         </header>
 
@@ -1533,8 +1593,8 @@
               Create a new vault
             </h2>
             <p class="card-sub">
-              No CSV yet? Start from scratch. You'll get an encrypted vault file
-              to download and keep safe.
+              No vault file yet? Start from scratch. You'll get an encrypted
+              vault file to download and keep safe — as CSV or JSON.
             </p>
 
             <label>
@@ -1728,8 +1788,9 @@
               Open an existing vault
             </h2>
             <p class="card-sub">
-              Already have a <span class="mono">.csv</span> vault? Load it and
-              unlock it with your master password.
+              Already have a <span class="mono">.csv</span> or
+              <span class="mono">.json</span> vault? Load it and unlock it with
+              your master password.
             </p>
 
             <div class="dropzone" id="dropzone">
@@ -1745,10 +1806,15 @@
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <strong>Drop your vault CSV here</strong>
-              <small>or click to browse files</small>
+              <strong>Drop your vault file here</strong>
+              <small>CSV or JSON — or click to browse files</small>
             </div>
-            <input type="file" id="file-input" accept=".csv,text/csv" hidden />
+            <input
+              type="file"
+              id="file-input"
+              accept=".csv,.json,text/csv,application/json"
+              hidden
+            />
             <div
               class="field-error"
               id="open-error"
@@ -1790,8 +1856,9 @@
               >One file, full control
             </h3>
             <p>
-              Your vault is a plain CSV of base64 ciphertext. Back it up, put it
-              on a USB stick, sync it yourself — no database required.
+              Your vault is a plain CSV or JSON of base64 ciphertext. Back it
+              up, put it on a USB stick, sync it yourself — no database
+              required.
             </p>
           </div>
           <div class="feature">
@@ -1944,7 +2011,7 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </span>
-            <span class="name">VaultZero</span>
+            <span class="name">Umbra</span>
           </div>
 
           <div class="search-box">
@@ -2018,7 +2085,7 @@
             <button
               class="icon-btn"
               id="btn-save"
-              title="Download encrypted CSV"
+              title="Download encrypted vault (CSV or JSON)"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -2868,8 +2935,9 @@
         </label>
 
         <div class="small muted" style="margin: -6px 0 16px">
-          The <span class="mono">.csv</span> extension is added automatically.
-          This name is used the next time you download the vault.
+          Use a <span class="mono">.csv</span> or
+          <span class="mono">.json</span> extension — the extension decides the
+          save format. This name is used the next time you download the vault.
         </div>
 
         <div class="modal-actions">
@@ -3104,6 +3172,79 @@
       </div>
     </div>
 
+    <!-- ================= SAVE FORMAT MODAL ================= -->
+    <div class="modal-backdrop" id="save-format-modal">
+      <div class="modal" style="max-width: 460px">
+        <div class="modal-head">
+          <h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download encrypted vault
+          </h2>
+          <button class="icon-btn" data-close="save-format-modal" title="Close">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <p class="small muted" style="margin: 0 0 16px">
+          Choose the file format for your encrypted vault. Both are equally
+          secure — the choice only affects how the ciphertext is wrapped.
+        </p>
+
+        <div class="save-format-options">
+          <button type="button" class="save-format-btn" data-format="csv">
+            <span class="save-format-icon">CSV</span>
+            <span class="save-format-info">
+              <strong>CSV</strong>
+              <small
+                >Plain comma-separated rows. Opens in any text editor or
+                spreadsheet.</small
+              >
+            </span>
+          </button>
+          <button type="button" class="save-format-btn" data-format="json">
+            <span class="save-format-icon">JSON</span>
+            <span class="save-format-info">
+              <strong>JSON</strong>
+              <small
+                >Structured format with metadata. Easier to inspect and script
+                against.</small
+              >
+            </span>
+          </button>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-ghost"
+            data-close="save-format-modal"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= CONFIRM MODAL ================= -->
     <div class="modal-backdrop" id="confirm-modal">
       <div class="modal" style="max-width: 440px">
@@ -3251,12 +3392,12 @@
         /* =========================================================
    Constants & helpers
    ========================================================= */
-        const CHECK = "VAULTZERO-CHECK-v1";
+        const CHECK = "UMBRA-CHECK-v1";
         const DEFAULT_ITERATIONS = 310000;
         const AUTOLOCK_MS = 5 * 60 * 1000;
         const CLIPBOARD_CLEAR_MS = 30000;
-        const THEME_KEY = "vaultzero-theme";
-        const SESSION_KEY = "vaultzero-session-v1";
+        const THEME_KEY = "umbra-theme";
+        const SESSION_KEY = "umbra-session-v1";
 
         const MAX_PASSPHRASE_WORDS = 20;
         const FIELD_TYPES = ["text", "hidden", "checkbox", "linked"];
@@ -3511,33 +3652,83 @@
           );
         }
 
-        async function downloadText(text, filename) {
-          // Preferred: File System Access API — memungkinkan deteksi Cancel
+        async function buildJSON() {
+          const verifier = await encryptData(state.key, { v: 1, check: CHECK });
+
+          const entries = [];
+          for (const e of state.entries) {
+            const payload = {
+              title: e.title || "",
+              username: e.username || "",
+              password: e.password || "",
+              url: e.url || "",
+              notes: e.notes || "",
+              customFields: Array.isArray(e.customFields) ? e.customFields : [],
+            };
+            const sealed = await encryptData(state.key, payload);
+            entries.push({
+              id: e.id,
+              updated: e.updated || new Date().toISOString(),
+              iv: sealed.iv,
+              data: sealed.ct,
+            });
+          }
+
+          return (
+            JSON.stringify(
+              {
+                format: "umbra",
+                version: 1,
+                meta: {
+                  salt: state.saltB64,
+                  iterations: state.iterations,
+                  iv: verifier.iv,
+                  data: verifier.ct,
+                },
+                entries,
+              },
+              null,
+              2,
+            ) + "\n"
+          );
+        }
+
+        async function serializeVault(format) {
+          return format === "json" ? await buildJSON() : await buildCSV();
+        }
+
+        async function downloadText(
+          text,
+          filename,
+          mimeType = "text/csv",
+          ext = ".csv",
+        ) {
+          // Preferred: File System Access API — lets us detect Cancel
           if (typeof window.showSaveFilePicker === "function") {
             try {
               const handle = await window.showSaveFilePicker({
                 suggestedName: filename,
                 types: [
                   {
-                    description: "CSV File",
-                    accept: { "text/csv": [".csv"] },
+                    description: ext === ".json" ? "JSON File" : "CSV File",
+                    accept: { [mimeType]: [ext] },
                   },
                 ],
               });
               const writable = await handle.createWritable();
               await writable.write(text);
               await writable.close();
-              return true; // benar-benar tersimpan
+              return true; // truly saved
             } catch (err) {
-              // AbortError = user menekan Cancel
+              // AbortError = user pressed Cancel
               if (err && err.name === "AbortError") return false;
-              // Error lain (mis. API diblokir) → jatuh ke fallback di bawah
-              console.warn("showSaveFilePicker gagal, pakai fallback:", err);
+              // Other error (e.g. API blocked) → fall back below
+              console.warn("showSaveFilePicker failed, using fallback:", err);
             }
           }
 
-          // Fallback: anchor download (tidak bisa mendeteksi Cancel)
-          const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+          // Fallback: anchor download (cannot detect Cancel)
+          const blob = new Blob([text], { type: mimeType + ";charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -4041,18 +4232,39 @@
           errEl.textContent = "";
           try {
             const text = await file.text();
-            await prepareVaultFromCSV(text, file.name || "vault.csv", false);
+            await prepareVaultFromText(text, file.name || "vault.csv", false);
           } catch (e) {
             console.error(e);
             errEl.textContent = e.message;
           }
         }
 
-        async function prepareVaultFromCSV(text, fileName, wasDirty) {
+        /* ---- format helpers ---- */
+        function formatFromFileName(name) {
+          return /\.json$/i.test(String(name || "")) ? "json" : "csv";
+        }
+        function extForFormat(format) {
+          return format === "json" ? ".json" : ".csv";
+        }
+        function mimeForFormat(format) {
+          return format === "json" ? "application/json" : "text/csv";
+        }
+        function detectFormatFromText(fileName, text) {
+          const n = String(fileName || "");
+          if (/\.json$/i.test(n)) return "json";
+          if (/\.csv$/i.test(n)) return "csv";
+          const t = String(text || "")
+            .replace(/^\uFEFF/, "")
+            .trimStart();
+          return t.startsWith("{") ? "json" : "csv";
+        }
+
+        /* ---- CSV parser ---- */
+        function parseVaultCSV(text) {
           const rows = parseCSV(text);
 
           if (rows.length < 2)
-            throw new Error("This file is empty or not a VaultZero vault.");
+            throw new Error("This file is empty or not a Umbra vault.");
 
           const header = rows[0].map((h) => h.trim().toLowerCase());
           const col = (name) => header.indexOf(name);
@@ -4065,9 +4277,7 @@
             iIter = col("iterations");
 
           if (iType < 0 || iIv < 0 || iData < 0) {
-            throw new Error(
-              "Unrecognized CSV layout. Expected VaultZero columns.",
-            );
+            throw new Error("Unrecognized CSV layout. Expected Umbra columns.");
           }
 
           const body = rows.slice(1);
@@ -4091,13 +4301,11 @@
               "Vault verifier is missing — file may be corrupted.",
             );
 
-          pending = {
-            fileName: fileName || "vault.csv",
+          return {
             saltB64,
             iterations,
             verifierIv,
             verifierCt,
-            wasDirty: !!wasDirty,
             rows: body
               .filter((r) => String(r[iType] || "").trim() === "entry")
               .map((r) => ({
@@ -4107,6 +4315,69 @@
                 ct: String(r[iData] || "").trim(),
               }))
               .filter((r) => r.iv && r.ct),
+          };
+        }
+
+        /* ---- JSON parser ---- */
+        function parseVaultJSON(text) {
+          let obj;
+          try {
+            obj = JSON.parse(text);
+          } catch (_) {
+            throw new Error("This JSON file could not be parsed.");
+          }
+          if (!obj || typeof obj !== "object")
+            throw new Error("This file is not a Umbra vault.");
+          if (obj.format !== "umbra")
+            throw new Error(
+              "Unrecognized JSON layout. Expected a Umbra vault.",
+            );
+
+          const meta = obj.meta || {};
+          const saltB64 = String(meta.salt || "").trim();
+          const iterations =
+            parseInt(meta.iterations, 10) || DEFAULT_ITERATIONS;
+          const verifierIv = String(meta.iv || "").trim();
+          const verifierCt = String(meta.data || "").trim();
+
+          if (!saltB64)
+            throw new Error("Vault salt is missing — file may be corrupted.");
+          if (!verifierIv || !verifierCt)
+            throw new Error(
+              "Vault verifier is missing — file may be corrupted.",
+            );
+
+          const list = Array.isArray(obj.entries) ? obj.entries : [];
+          return {
+            saltB64,
+            iterations,
+            verifierIv,
+            verifierCt,
+            rows: list
+              .map((r) => ({
+                id: String((r && r.id) || "").trim(),
+                updated: String((r && r.updated) || "").trim(),
+                iv: String((r && r.iv) || "").trim(),
+                ct: String((r && (r.data || r.ct)) || "").trim(),
+              }))
+              .filter((r) => r.iv && r.ct),
+          };
+        }
+
+        async function prepareVaultFromText(text, fileName, wasDirty) {
+          const format = detectFormatFromText(fileName, text);
+          const parsed =
+            format === "json" ? parseVaultJSON(text) : parseVaultCSV(text);
+
+          pending = {
+            fileName: fileName || "vault" + extForFormat(format),
+            format,
+            saltB64: parsed.saltB64,
+            iterations: parsed.iterations,
+            verifierIv: parsed.verifierIv,
+            verifierCt: parsed.verifierCt,
+            wasDirty: !!wasDirty,
+            rows: parsed.rows,
           };
 
           $("#unlock-filename").textContent = pending.fileName;
@@ -4189,7 +4460,7 @@
             openVaultScreen();
             persistSession();
             if (restoredDirty) {
-              // Status akan tetap "Unsaved changes" setelah unlock
+              // Status will remain "Unsaved changes" after unlocking
               updateStatus();
             }
             toast(
@@ -4646,7 +4917,7 @@
             .slice(0, 80);
         }
 
-        function normalizeVaultFileName(raw) {
+        function normalizeVaultFileName(raw, defaultFormat) {
           let name = String(raw == null ? "" : raw).trim();
           name = name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "-");
           name = name
@@ -4656,19 +4927,21 @@
             .slice(0, 120)
             .trim();
           if (!name) name = "vault";
-          if (!/\.csv$/i.test(name)) name += ".csv";
+          if (!/\.(csv|json)$/i.test(name)) {
+            name += extForFormat(defaultFormat || "csv");
+          }
           return name;
         }
 
         /* =========================================================
-   Session persistence — vault tetap terbuka setelah refresh
+   Session persistence — vault stays open after refresh
    ========================================================= */
-        function saveSession(csvText, fileName, wasDirty) {
+        function saveSession(text, fileName, wasDirty) {
           try {
             sessionStorage.setItem(
               SESSION_KEY,
               JSON.stringify({
-                csvText,
+                text,
                 fileName,
                 wasDirty: !!wasDirty,
               }),
@@ -4687,8 +4960,10 @@
             const raw = sessionStorage.getItem(SESSION_KEY);
             if (!raw) return null;
             const obj = JSON.parse(raw);
-            if (!obj || !obj.csvText) return null;
-            return obj;
+            if (!obj) return null;
+            const text = obj.text != null ? obj.text : obj.csvText; // backward compat
+            if (!text) return null;
+            return { text, fileName: obj.fileName, wasDirty: obj.wasDirty };
           } catch (_) {
             return null;
           }
@@ -4701,8 +4976,9 @@
           persistTimer = setTimeout(async () => {
             if (!state.key) return;
             try {
-              const csv = await buildCSV();
-              saveSession(csv, state.fileName, state.dirty);
+              const format = formatFromFileName(state.fileName);
+              const text = await serializeVault(format);
+              saveSession(text, state.fileName, state.dirty);
             } catch (_) {}
           }, 300);
         }
@@ -4754,10 +5030,10 @@
 
           const all = sets.join("");
 
-          // Mulai dengan satu dari tiap set yang aktif
+          // Start with one from each active set
           const chars = sets.map((s) => s[randInt(s.length)]);
 
-          // Pastikan jumlah minimum angka (maks 9)
+          // Ensure minimum number of digits (max 9)
           if (digits) {
             const md = Math.min(Math.max(0, minDigits | 0), 9, length);
             let have = chars.filter((c) => cs.digits.includes(c)).length;
@@ -4767,7 +5043,7 @@
             }
           }
 
-          // Pastikan jumlah minimum simbol (maks 9)
+          // Ensure minimum number of symbols (max 9)
           if (symbols) {
             const ms = Math.min(Math.max(0, minSymbols | 0), 9, length);
             let have = chars.filter((c) => cs.symbols.includes(c)).length;
@@ -4777,7 +5053,7 @@
             }
           }
 
-          // Isi sisanya dari semua charset
+          // Fill the rest from all charsets
           while (chars.length < length) chars.push(all[randInt(all.length)]);
 
           // Fisher-Yates shuffle
@@ -5152,23 +5428,40 @@
    ========================================================= */
         async function saveVault() {
           if (!state.key) return;
+          openModal("save-format-modal");
+        }
+
+        async function performSave(format) {
+          if (!state.key) return;
+          closeModal("save-format-modal");
+
           const btn = $("#btn-save");
           btn.disabled = true;
           try {
-            const csv = await buildCSV();
-            const saved = await downloadText(
-              csv,
-              state.fileName || "vault.csv",
-            );
+            const ext = extForFormat(format);
+            const mime = mimeForFormat(format);
+            const text = await serializeVault(format);
+
+            // Align the filename extension with the chosen format
+            let name = state.fileName || "vault" + ext;
+            name = name.replace(/\.(csv|json)$/i, "") + ext;
+
+            const saved = await downloadText(text, name, mime, ext);
             if (!saved) {
-              // User menekan Cancel di dialog Save As
+              // User pressed Cancel in the Save As dialog
               updateStatus();
               toast("Save cancelled — changes are still unsaved", "error");
               return;
             }
+
+            state.fileName = name;
             state.dirty = false;
             updateStatus();
-            toast("Encrypted vault downloaded — store it somewhere safe", "ok");
+            persistSession();
+            toast(
+              `Encrypted ${format.toUpperCase()} vault downloaded — store it somewhere safe`,
+              "ok",
+            );
           } catch (e) {
             console.error(e);
             toast("Failed to save vault: " + e.message, "error");
@@ -5242,13 +5535,29 @@
         }
 
         function applyVaultName() {
-          const name = normalizeVaultFileName($("#rename-input").value);
-          state.fileName = name;
-          $("#rename-input").value = name;
-          updateStatus();
-          persistSession();
-          closeModal("rename-modal");
-          toast("Vault file renamed to " + name, "ok");
+          const currentFormat = formatFromFileName(state.fileName);
+          const name = normalizeVaultFileName(
+            $("#rename-input").value,
+            currentFormat,
+          );
+
+          if (name !== state.fileName) {
+            state.fileName = name;
+            state.dirty = true;
+            $("#rename-input").value = name;
+            updateStatus();
+            persistSession();
+            closeModal("rename-modal");
+            toast(
+              "Vault file renamed to " + name + " — download to apply",
+              "ok",
+            );
+          } else {
+            // Name does not change — no need to mark dirty or save session
+            $("#rename-input").value = name;
+            closeModal("rename-modal");
+            toast("File name unchanged", "info");
+          }
         }
 
         /* =========================================================
@@ -5344,16 +5653,17 @@
           const fileName = state.fileName;
           const wasDirty = state.dirty;
 
-          // Snapshot terenkripsi sebelum memory dibersihkan
-          let csvText;
+          // Snapshot the encrypted vault before clearing memory
+          let vaultText;
           try {
-            csvText = await buildCSV();
+            const format = formatFromFileName(fileName);
+            vaultText = await serializeVault(format);
           } catch (e) {
             toast("Could not lock vault: " + e.message, "error");
             return;
           }
 
-          // Bersihkan memory & UI (mirip lockVault, tapi tanpa clearSession)
+          // Clear memory & UI (similar to lockVault, but keeps the session)
           clearTimeout(lockTimer);
           state = {
             key: null,
@@ -5395,12 +5705,12 @@
 
           $$(".modal-backdrop").forEach((m) => m.classList.remove("open"));
 
-          // Simpan session agar tahan refresh
-          saveSession(csvText, fileName, wasDirty);
+          // Save the session so it survives a refresh
+          saveSession(vaultText, fileName, wasDirty);
 
-          // Langsung arahkan ke layar unlock untuk file yang sama
+          // Jump straight to the unlock screen for the same file
           try {
-            await prepareVaultFromCSV(csvText, fileName, wasDirty);
+            await prepareVaultFromText(vaultText, fileName, wasDirty);
             toast("Vault locked — enter your master password to resume", "ok");
           } catch (e) {
             clearSession();
@@ -5436,14 +5746,12 @@
             return;
           }
 
-          /* --- restore session (jangan logout paksa saat refresh) --- */
+          /* --- restore session (avoid forced logout on refresh) --- */
           const sess = loadSession();
-          if (sess && sess.csvText) {
-            prepareVaultFromCSV(
-              sess.csvText,
-              sess.fileName,
-              sess.wasDirty,
-            ).catch(() => clearSession());
+          if (sess && sess.text) {
+            prepareVaultFromText(sess.text, sess.fileName, sess.wasDirty).catch(
+              () => clearSession(),
+            );
           }
 
           /* --- theme --- */
@@ -5542,6 +5850,9 @@
           /* --- vault toolbar --- */
           $("#btn-add").addEventListener("click", () => openEntryModal(null));
           $("#btn-save").addEventListener("click", saveVault);
+          $$("#save-format-modal [data-format]").forEach((b) =>
+            b.addEventListener("click", () => performSave(b.dataset.format)),
+          );
           $("#btn-lock-vault").addEventListener("click", () => {
             lockVaultKeepFile();
           });
@@ -5690,7 +6001,8 @@
 
           /* --- rename vault file modal --- */
           $("#rename-quick-gen").addEventListener("click", () => {
-            $("#rename-input").value = generateRandomName() + ".csv";
+            const fmt = formatFromFileName(state.fileName);
+            $("#rename-input").value = generateRandomName() + extForFormat(fmt);
           });
           $("#open-user-gen-filename").addEventListener("click", () =>
             openUsernameGenerator("filename"),
@@ -5795,7 +6107,7 @@
             refreshGenerator();
           });
 
-          // Disable / enable input minimum sesuai checkbox kategori
+          // Enable / disable minimum inputs according to category checkbox
           const syncMinInputs = () => {
             const d = $("#gen-digits").checked;
             const s = $("#gen-symbols").checked;
@@ -5904,8 +6216,9 @@
             if (!u || u === "…") return;
 
             if (userMode === "filename") {
+              const fmt = formatFromFileName(state.fileName);
               $("#rename-input").value =
-                (sanitizeNamePart(u) || "vault") + ".csv";
+                (sanitizeNamePart(u) || "vault") + extForFormat(fmt);
               closeModal("username-modal");
               toast("Name inserted", "ok");
               setTimeout(() => {
