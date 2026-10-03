@@ -3598,7 +3598,8 @@
         /* =========================================================
    Constants & helpers
    ========================================================= */
-        const CHECK = "UMBRA-CHECK-v1";
+        // Opaque, non-identifying markers — product name is never written to disk.
+        const CHECK = "9f4c2a1eb7d3"; // verifier value (only inside the encrypted payload)
         const DEFAULT_ITERATIONS = 310000;
         const AUTOLOCK_MS = 5 * 60 * 1000;
         const CLIPBOARD_CLEAR_MS = 30000;
@@ -3617,8 +3618,16 @@
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-        const enc = new TextEncoder();
-        const dec = new TextDecoder();
+        // Derives an opaque, per-vault format marker from the vault salt.
+        // Same salt → same marker; different vault → different marker.
+        async function deriveFileMarker(saltB64) {
+          const data = enc.encode("f1:" + String(saltB64 || ""));
+          const hash = await subtle.digest("SHA-256", data);
+          const bytes = new Uint8Array(hash).slice(0, 12); // 96 bits → 24 hex chars
+          let hex = "";
+          for (const b of bytes) hex += b.toString(16).padStart(2, "0");
+          return hex;
+        }
 
         const esc = (s) =>
           String(s ?? "").replace(
@@ -3880,10 +3889,12 @@
             });
           }
 
+          const marker = await deriveFileMarker(state.saltB64);
+
           return (
             JSON.stringify(
               {
-                format: "umbra",
+                format: marker,
                 version: 1,
                 meta: {
                   salt: state.saltB64,
@@ -4470,7 +4481,7 @@
           const rows = parseCSV(text);
 
           if (rows.length < 2)
-            throw new Error("This file is empty or not a Umbra vault.");
+            throw new Error("This file is empty or not a valid vault.");
 
           const header = rows[0].map((h) => h.trim().toLowerCase());
           const col = (name) => header.indexOf(name);
@@ -4483,7 +4494,7 @@
             iIter = col("iterations");
 
           if (iType < 0 || iIv < 0 || iData < 0) {
-            throw new Error("Unrecognized CSV layout. Expected Umbra columns.");
+            throw new Error("Unrecognized CSV layout.");
           }
 
           const body = rows.slice(1);
@@ -4525,7 +4536,7 @@
         }
 
         /* ---- JSON parser ---- */
-        function parseVaultJSON(text) {
+        async function parseVaultJSON(text) {
           let obj;
           try {
             obj = JSON.parse(text);
@@ -4533,14 +4544,23 @@
             throw new Error("This JSON file could not be parsed.");
           }
           if (!obj || typeof obj !== "object")
-            throw new Error("This file is not a Umbra vault.");
-          if (obj.format !== "umbra")
-            throw new Error(
-              "Unrecognized JSON layout. Expected a Umbra vault.",
-            );
+            throw new Error("This file is not a valid vault.");
 
           const meta = obj.meta || {};
           const saltB64 = String(meta.salt || "").trim();
+
+          // Verify per-vault derived marker.
+          let formatOk = false;
+          if (saltB64) {
+            try {
+              const expected = await deriveFileMarker(saltB64);
+              formatOk = obj.format === expected;
+            } catch (_) {
+              formatOk = false;
+            }
+          }
+          if (!formatOk) throw new Error("Unrecognized JSON layout.");
+
           const iterations =
             parseInt(meta.iterations, 10) || DEFAULT_ITERATIONS;
           const verifierIv = String(meta.iv || "").trim();
@@ -4573,7 +4593,9 @@
         async function prepareVaultFromText(text, fileName, wasDirty) {
           const format = detectFormatFromText(fileName, text);
           const parsed =
-            format === "json" ? parseVaultJSON(text) : parseVaultCSV(text);
+            format === "json"
+              ? await parseVaultJSON(text)
+              : parseVaultCSV(text);
 
           pending = {
             fileName: fileName || "vault" + extForFormat(format),

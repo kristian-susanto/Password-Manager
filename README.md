@@ -1,431 +1,370 @@
 # Umbra — Zero-Knowledge Password Manager
 
-> A fully client-side, file-based password manager. Every field is sealed with AES-256-GCM using a key derived from your master password via PBKDF2-SHA256. Nothing is uploaded, synced, or tracked — the entire vault lives in a single encrypted CSV or JSON file that you own.
+A file-based, zero-knowledge password manager that runs entirely in your browser. Every field is sealed with **AES-256-GCM** using a key derived from your master password via **PBKDF2-SHA256 (310,000 iterations)**. Nothing is uploaded, nothing is synced, and no server ever sees your data — the entire vault lives in a single CSV or JSON file that you own.
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Security Model](#security-model)
-3. [Vault File Format](#vault-file-format)
-4. [Getting Started](#getting-started)
-5. [Features](#features)
-6. [UI Reference](#ui-reference)
-7. [Keyboard & Interaction Behaviors](#keyboard--interaction-behaviors)
-8. [Architecture](#architecture)
-9. [Storage & Session](#storage--session)
-10. [Browser Requirements](#browser-requirements)
-11. [Limitations & Caveats](#limitations--caveats)
-12. [Glossary](#glossary)
+2. [Features](#features)
+3. [Getting Started](#getting-started)
+4. [Security Model](#security-model)
+5. [How Unlock Works](#how-unlock-works)
+6. [Vault File Formats](#vault-file-formats)
+   - [CSV Format](#csv-format)
+   - [JSON Format](#json-format)
+   - [The `format` field — a per-vault derived marker](#the-format-field--a-per-vault-derived-marker)
+7. [Architecture](#architecture)
+8. [Key Functions](#key-functions)
+9. [UI Reference](#ui-reference)
+10. [Storage](#storage)
+11. [Browser Requirements](#browser-requirements)
+12. [Limitations](#limitations)
+13. [Cheatsheet](#cheatsheet)
+14. [Glossary](#glossary)
 
 ---
 
 ## Overview
 
-**Umbra** is a single-file (`index.html`) password manager that runs entirely inside your browser tab. It stores credentials in an encrypted file — **CSV** or **JSON** — that you download, back up, and re-open manually. There is:
+Umbra stores your whole vault in a **single CSV or JSON file** of base64 ciphertext. There is no database, no backend, no telemetry, no analytics — the app is a single HTML document that you can open offline.
 
-- No backend, no server, no API.
-- No network requests, no analytics, no cookies.
-- No cloud sync, no account, no email.
+Each entry is encrypted independently, so the file leaks nothing about its contents beyond the number of entries and their last-updated timestamps. The vault file itself never carries a product marker, product name, or vendor identifier — an outside observer sees only opaque base64 blobs, an opaque per-vault marker, and generic column headers.
 
-Everything is derived from a **master password** you choose.
-
----
-
-## Security Model
-
-### Zero-Knowledge by Design
-
-| Aspect                  | Detail                                                                |
-| ----------------------- | --------------------------------------------------------------------- |
-| Key derivation          | PBKDF2-SHA256                                                         |
-| Iterations              | 310,000 (default)                                                     |
-| Salt                    | 16 random bytes per vault, stored in plaintext in the file            |
-| Cipher                  | AES-256-GCM                                                           |
-| IV                      | 12 random bytes per encryption operation                              |
-| Master password storage | **Never stored** — not even hashed                                    |
-| Verifier                | An encrypted `{ v: 1, check: "UMBRA-CHECK-v1" }` blob in the meta row |
-
-### How Unlock Works
-
-1. The vault file's plaintext `salt` and `iterations` are read.
-2. The master password is passed through PBKDF2 to derive an AES-GCM key.
-3. The **verifier blob** (stored in the `meta` row) is decrypted.
-   - If it decrypts to `{ check: "UMBRA-CHECK-v1" }`, the password is correct.
-   - Otherwise, decryption fails (AES-GCM authentication tag mismatch) and an error is shown.
-4. Each entry's ciphertext is decrypted individually. Any rows that fail to decrypt are counted as **skipped**.
-
-### Threat Model
-
-**Protects against:**
-
-- Anyone who obtains your vault file without the master password.
-- Tampering — AES-GCM rejects modified ciphertext.
-- Network eavesdropping (nothing is ever transmitted).
-
-**Does NOT protect against:**
-
-- Malware on your device (keyloggers, memory scrapers).
-- A weak master password (PBKDF2 slows, but does not stop, brute force).
-- Someone who sees your screen while the vault is unlocked.
-
----
-
-## Vault File Format
-
-Umbra supports two interchangeable formats. Both wrap the same ciphertext payloads; only the container differs.
-
-### CSV Format
-
-```csv
-type,id,updated,iv,data,salt,iterations
-meta,,,<b64-iv>,<b64-verifier>,<b64-salt>,310000
-entry,<uuid>,<iso8601>,<b64-iv>,<b64-ct>,,
-entry,<uuid>,<iso8601>,<b64-iv>,<b64-ct>,,
-```
-
-- `type` — `meta` (one row) or `entry` (zero or more rows).
-- `iv` — base64-encoded 12-byte AES-GCM initialization vector.
-- `data` — base64-encoded ciphertext (includes GCM auth tag).
-- `salt` / `iterations` — only present on the `meta` row.
-- Fields containing `"`, `,`, or newlines are quoted per RFC 4180.
-
-### JSON Format
-
-```json
-{
-  "format": "umbra",
-  "version": 1,
-  "meta": {
-    "salt": "<b64-salt>",
-    "iterations": 310000,
-    "iv": "<b64-iv>",
-    "data": "<b64-verifier-ct>"
-  },
-  "entries": [
-    {
-      "id": "<uuid>",
-      "updated": "<iso8601>",
-      "iv": "<b64-iv>",
-      "data": "<b64-ct>"
-    }
-  ]
-}
-```
-
-### Entry Payload (decrypted)
-
-Each entry's plaintext, once decrypted, is a JSON object:
-
-```json
-{
-  "title": "GitHub",
-  "username": "you@example.com",
-  "password": "correct-horse-battery-staple",
-  "url": "https://github.com",
-  "notes": "2FA recovery codes in 1Password",
-  "customFields": [
-    { "id": "<uuid>", "type": "text", "label": "PIN", "value": "1234" },
-    { "id": "<uuid>", "type": "hidden", "label": "API Key", "value": "sk-…" },
-    { "id": "<uuid>", "type": "checkbox", "label": "Has 2FA", "value": true },
-    {
-      "id": "<uuid>",
-      "type": "linked",
-      "label": "Admin URL",
-      "value": "https://admin.example.com"
-    }
-  ]
-}
-```
-
----
-
-## Getting Started
-
-### Create a New Vault
-
-1. Open `index.html` in a modern browser.
-2. In the **Create a new vault** card:
-   - Enter a master password (≥ 8 characters).
-   - Confirm it.
-   - _(Optional)_ Click the generate icon for a strong password, or the copy icon to copy it.
-   - _(Optional)_ Watch the strength bar to gauge quality.
-3. Click **Create encrypted vault**.
-4. You are taken to the vault screen. **Immediately download the encrypted file** via the download icon in the toolbar — nothing is persisted on disk otherwise.
-
-### Open an Existing Vault
-
-1. In the **Open an existing vault** card, drag-and-drop your `.csv` or `.json` vault onto the drop zone (or click it to browse).
-2. On the unlock screen, enter your master password.
-3. Click **Unlock vault** (or press <kbd>Enter</kbd>).
-
-### Save the Vault
-
-Click the **download icon** in the top toolbar. A modal lets you pick **CSV** or **JSON**. The file extension of your current vault name determines the default suggestion.
-
-> **Always re-download after changing the master password** — the derived key changes, so the old file will only open with the old password.
+> **Note:** the vault file contains **no product name and no fixed marker**. The only "format" value in the JSON envelope is a _derived_ marker (`SHA-256(salt)` truncated to 96 bits), which is unique to each vault.
 
 ---
 
 ## Features
 
-### Credential Management
-
-- Add, edit, view, and delete entries.
-- Bulk select via the per-row checkbox, the select-all pill, or the **selection action bar** at the bottom.
-- Bulk delete selected entries with confirmation.
-- Search across `title`, `username`, `url`, `notes`, and custom fields.
-- Entries are auto-sorted alphabetically by title (case-insensitive).
-
-### Entry Fields
-
-| Field            | Notes                                                                      |
-| ---------------- | -------------------------------------------------------------------------- |
-| Title            | Required, max 120 chars                                                    |
-| Username / Email | Max 200 chars                                                              |
-| Password         | Max 512 chars, masked by default with reveal toggle                        |
-| Website URL      | Max 300 chars; auto-prefixed with `https://` when opened if scheme missing |
-| Notes            | Max 2000 chars, multi-line                                                 |
-| Custom fields    | Up to any number; see below                                                |
-
-### Custom Fields
-
-Four types are supported, each rendered differently in the **detail modal**:
-
-| Type       | Editor       | Detail view                             |
-| ---------- | ------------ | --------------------------------------- |
-| `text`     | Plain input  | Plain text                              |
-| `hidden`   | Masked input | Masked with reveal toggle + copy button |
-| `checkbox` | Checkbox     | `✓ Yes` / `✗ No`                        |
-| `linked`   | URL input    | Clickable hyperlink                     |
-
-### Password Generator
-
-Two modes, available from the toolbar, entry form, and master-password fields:
-
-**Random Password**
-
-- Length: 8–128 (default 20)
-- Toggles: uppercase, lowercase, digits, symbols
-- Minimum digits (0–9), minimum symbols (0–9)
-- Option: avoid ambiguous characters (`l`, `I`, `O`, `0`, `1`)
-- Guarantees at least one character from each enabled set, then Fisher–Yates shuffles.
-
-**Memorable Passphrase**
-
-- 2–20 words (default 3)
-- Custom separator (max 3 chars, default `-`)
-- Optional capitalization of each word
-- Word list of ~350 English nouns (nature/animal themes).
-
-### Username Generator
-
-| Type                 | Output example          |
-| -------------------- | ----------------------- |
-| Random Word          | `Lantern42`             |
-| Plus Addressed Email | `user+a1b2c3@gmail.com` |
-| Catch-All Email      | `x7k9m2p4@mydomain.com` |
-
-### File Operations
-
-- **Download as CSV or JSON** — via the save-format modal.
-- **Rename vault file** — the extension (`.csv` / `.json`) drives the save format.
-  - Quick random name generator (e.g. `Comet482.json`).
-  - Username generator can be used as a filename base.
-- **Change master password** — generates a new salt and key, sets vault to "unsaved changes."
-
-### Vault Locking
-
-- **Lock vault** — encrypts the vault, keeps the session, and immediately drops you on the unlock screen for the same file.
-- **Log out** — clears the vault from memory entirely and returns to the welcome screen. Warns if you have unsaved changes.
-- **Auto-lock** — 5 minutes of inactivity triggers a silent logout with a toast.
-- **beforeunload guard** — browser warns if you have unsaved changes and try to close the tab.
-
-### Clipboard Safety
-
-- Copy actions auto-clear the clipboard after **30 seconds**.
-- Copy button provides a fallback via `document.execCommand("copy")` for contexts where the Clipboard API is blocked.
-
-### Theme
-
-- Dark and light themes, toggled via the sun/moon button.
-- Selection is remembered in `localStorage` under `umbra-theme`.
-- Defaults to your OS preference via `prefers-color-scheme`.
+- **Zero-knowledge by design** — your master password is never stored, never hashed, never sent anywhere.
+- **AES-256-GCM** authenticated encryption for every entry payload.
+- **PBKDF2-SHA256** with **310,000 iterations** for key derivation (16-byte random salt per vault).
+- **Single-file vault** in either **CSV** or **JSON** — back it up, put it on a USB stick, sync it yourself.
+- **Offline & tracker-free** — no network calls, no cookies, no third-party scripts.
+- **Two password generators**: Random Password and Memorable Passphrase.
+- **Username generator**: random word, plus-addressed email, or catch-all email.
+- **Custom fields** per entry: `text`, `hidden`, `checkbox`, `linked`.
+- **Multi-select** with a floating action bar for bulk deletion.
+- **Auto-lock** after 5 minutes of inactivity.
+- **Clipboard auto-clear** 30 seconds after copying a secret.
+- **Session persistence** — refreshing the page returns you to the unlock screen without losing the loaded vault file.
+- **Rename vault file**, **change master password**, **save as CSV or JSON**.
+- **Light / dark theme** with `prefers-color-scheme` detection.
 
 ---
 
-## UI Reference
+## Getting Started
 
-### Screens
+### Create a new vault
 
-| Screen            | Purpose                                 |
-| ----------------- | --------------------------------------- |
-| `#screen-welcome` | Create or open a vault                  |
-| `#screen-unlock`  | Enter master password for a loaded file |
-| `#screen-vault`   | Main vault interface                    |
+1. Open `index.html` in a modern browser (over **HTTPS** or `localhost`).
+2. In the **Create a new vault** card, enter a master password (min. 8 characters) and confirm it.
+3. Optionally click the refresh icon for a generated password, or the key icon to open the full generator.
+4. Click **Create encrypted vault**.
+5. Add entries with **Add**.
+6. Click the **download icon** in the toolbar and pick **CSV** or **JSON** to save your encrypted vault file.
 
-### Toolbar Buttons (Vault Screen)
+> Remember to download the vault after creating it — until you do, the only copy lives in your browser's memory.
 
-| Icon               | Action                                 |
-| ------------------ | -------------------------------------- |
-| **Add**            | Open the Add Entry modal               |
-| Username generator | Open username generator (standalone)   |
-| Password generator | Open password generator (standalone)   |
-| Download           | Open the save-format modal             |
-| Rename             | Rename the vault file                  |
-| Change password    | Change the master password             |
-| Theme toggle       | Switch light/dark                      |
-| Lock vault         | Lock and jump to unlock screen         |
-| Log out            | Clear everything and return to welcome |
+### Open an existing vault
 
-### Modals
-
-| ID                       | Purpose                                          |
-| ------------------------ | ------------------------------------------------ |
-| `#entry-modal`           | Add/edit an entry, including custom fields       |
-| `#add-field-modal`       | Choose a new custom field's type                 |
-| `#gen-modal`             | Password generator (random / passphrase)         |
-| `#username-modal`        | Username generator                               |
-| `#rename-modal`          | Rename vault file                                |
-| `#change-password-modal` | Change master password                           |
-| `#save-format-modal`     | Choose CSV or JSON on download                   |
-| `#confirm-modal`         | Generic confirmation dialog                      |
-| `#detail-modal`          | Read-only entry details with copy/reveal buttons |
+1. Drag your `.csv` / `.json` vault onto the dropzone, or click to browse.
+2. Enter your master password on the unlock screen.
+3. Umbra decrypts the vault in memory only.
 
 ---
 
-## Keyboard & Interaction Behaviors
+## Security Model
 
-- <kbd>Enter</kbd> on the unlock password field triggers unlock.
-- <kbd>Enter</kbd> on the rename field applies the new name.
-- <kbd>Escape</kbd> closes any open modal.
-- Clicking the modal backdrop (outside the modal card) closes the modal.
-- Clicking the confirm modal backdrop resolves it as **cancel**.
-- The floating selection action bar shifts the toast downward when visible.
+### Zero-Knowledge table
+
+| Component               | Value / Mechanism                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Cipher                  | AES-256-GCM                                                                                                        |
+| Key derivation          | PBKDF2-SHA256                                                                                                      |
+| Iterations              | `310000` (constant `DEFAULT_ITERATIONS`)                                                                           |
+| Salt                    | 16 random bytes, base64-encoded, stored in the vault file                                                          |
+| IV                      | 12 random bytes per encryption, base64-encoded                                                                     |
+| Verifier payload        | `{ v: 1, check: "9f4c2a1eb7d3" }` — encrypted with the derived key; decrypts successfully only on correct password |
+| Encrypted entry payload | `{ title, username, password, url, notes, customFields[] }`                                                        |
+| **File format marker**  | `SHA-256("f1:" + saltB64)` truncated to the first **96 bits → 24 hex chars**                                       |
+| Master password storage | **Never stored**, not even hashed                                                                                  |
+| Network calls           | **None**                                                                                                           |
+
+### What an attacker sees in the vault file
+
+- The number of entries.
+- The `updated` timestamp of each entry (ISO 8601).
+- The random salt and iteration count.
+- A per-vault marker (96-bit hex) in the JSON envelope.
+- Opaque base64 blobs: IVs and ciphertexts.
+
+Nothing else.
+
+---
+
+## How Unlock Works
+
+1. You load a vault file. Umbra auto-detects the format (from the `.csv` / `.json` extension, or by sniffing the first non-whitespace character).
+2. You enter your master password.
+3. Umbra derives the AES key with **PBKDF2-SHA256** using the salt and iteration count read from the file.
+4. It decrypts the verifier blob and checks that the plaintext equals `{ v: 1, check: "9f4c2a1eb7d3" }`.
+   - If decryption throws (GCM authentication failure) or the check value mismatches, the password is wrong.
+5. Only then does Umbra decrypt each entry row.
+
+### Pre-flight check for JSON
+
+Before touching the crypto, the JSON parser verifies that `format` equals `deriveFileMarker(salt)`. If the marker doesn't match the salt, the file is rejected as an unrecognized layout. This is a **structural sanity check**, not a security boundary — it simply prevents Umbra from trying to open a generic JSON file.
+
+---
+
+## Vault File Formats
+
+### CSV Format
+
+The CSV header is **fully generic** — nothing in it reveals the product, the vendor, or the app version.
+
+```
+type,id,updated,iv,data,salt,iterations
+```
+
+Example (with truncated base64 for readability):
+
+```csv
+type,id,updated,iv,data,salt,iterations
+meta,,,,AAAAAAAAAAAAAAAA,BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB,CCCCCCCCCCCCCCCCCCCCCC=,310000
+entry,5e3f…-…-…,2025-01-15T12:34:56.789Z,DDDDDDDDDDDDDDDD,EEEEEEEEEE…,,
+entry,9a1c…-…-…,2025-01-15T12:35:01.012Z,FFFFFFFFFFFFFFFF,GGGGGGGGGG…,,
+```
+
+| Column       | Row `meta`                        | Row `entry`                    |
+| ------------ | --------------------------------- | ------------------------------ |
+| `type`       | `meta`                            | `entry`                        |
+| `id`         | _(empty)_                         | UUID v4                        |
+| `updated`    | _(empty)_                         | ISO 8601 timestamp             |
+| `iv`         | base64 IV of the verifier         | base64 IV of the entry         |
+| `data`       | base64 ciphertext of the verifier | base64 ciphertext of the entry |
+| `salt`       | base64 salt (16 bytes)            | _(empty)_                      |
+| `iterations` | PBKDF2 iterations (e.g. `310000`) | _(empty)_                      |
+
+- Values are escaped per RFC 4180 (`"` doubled, fields containing `,`, `"`, `\r`, or `\n` quoted).
+- Line endings are `\r\n`.
+- UTF-8, no BOM written by Umbra.
+- The file is only invalidated by a missing `meta` row — every `entry` row that fails to decrypt is silently skipped and reported in the toast (e.g. _"Vault unlocked — 2 unreadable row(s) skipped"_).
+
+### JSON Format
+
+```json
+{
+  "format": "<24-hex-char derived marker>",
+  "version": 1,
+  "meta": {
+    "salt": "<base64 salt>",
+    "iterations": 310000,
+    "iv": "<base64 IV of verifier>",
+    "data": "<base64 ciphertext of verifier>"
+  },
+  "entries": [
+    {
+      "id": "<uuid v4>",
+      "updated": "<ISO 8601 timestamp>",
+      "iv": "<base64 IV>",
+      "data": "<base64 ciphertext>"
+    }
+  ]
+}
+```
+
+### The `format` field — a per-vault derived marker
+
+The `format` value is **not a fixed string**. It is derived from the vault's own salt:
+
+```
+format = SHA-256("f1:" + base64(salt))[0..12]   // 96 bits, hex-encoded → 24 chars
+```
+
+Properties:
+
+- **Stable** — the same salt always produces the same marker.
+- **Unique** — different vaults (different salts) produce unrelated markers.
+- **Opaque** — the output reveals nothing about Umbra, the user, or the vault's contents.
+- **Verifiable offline** — anyone who has the salt can recompute it.
+
+Example output:
+
+```
+f3a91c0b7e42d5a88f1c6b3e
+```
+
+> **No legacy marker.** There is no static, well-known string used as a fallback. If `format` doesn't equal `SHA-256("f1:" + salt)[0..12]`, the file is rejected.
 
 ---
 
 ## Architecture
 
-The entire app is a single IIFE in `index.html`:
-
 ```
-┌────────────────────────────────────────────────┐
-│  UI layer                                       │
-│   Screens:  welcome / unlock / vault            │
-│   Modals:   entry, generator, confirm, …        │
-├────────────────────────────────────────────────┤
-│  State                                          │
-│   state = { key, saltB64, iterations,           │
-│             entries, fileName, dirty }          │
-│   pending   – parsed file awaiting unlock       │
-│   revealed  – set of decrypted entry IDs        │
-│   selected  – set of selected entry IDs         │
-├────────────────────────────────────────────────┤
-│  Crypto (WebCrypto)                             │
-│   deriveKey → PBKDF2-SHA256 → AES-GCM 256       │
-│   encryptData / decryptData                     │
-├────────────────────────────────────────────────┤
-│  Serialization                                  │
-│   buildCSV / buildJSON ↔ parseVaultCSV / JSON   │
-├────────────────────────────────────────────────┤
-│  Storage                                        │
-│   sessionStorage: umbra-session-v1              │
-│   localStorage:   umbra-theme                   │
-└────────────────────────────────────────────────┘
+                ┌──────────────────────────────────────────────┐
+                │                 Browser tab                  │
+                │                                              │
+  user input ─▶ │  UI  ──▶  deriveKey(PBKDF2-SHA256, 310k)     │
+                │           │                                  │
+                │           ├──▶  encryptData / decryptData    │
+                │           │      (AES-256-GCM, 12-byte IV)   │
+                │           │                                  │
+                │           ├──▶  serializeVault(format)        │
+                │           │      ├── buildCSV()              │
+                │           │      └── buildJSON()             │
+                │           │                                  │
+                │           └──▶  deriveFileMarker(salt)        │
+                │                  SHA-256("f1:"+salt) → hex    │
+                │                                              │
+                │  sessionStorage  ◀── persistSession()        │
+                │  (encrypted vault snapshot, tab-scoped)      │
+                └──────────────────────────────────────────────┘
 ```
 
-### Key Functions
-
-| Function                                  | Role                                                      |
-| ----------------------------------------- | --------------------------------------------------------- |
-| `deriveKey(password, salt, iterations)`   | PBKDF2 → AES-GCM key                                      |
-| `encryptData(key, obj)`                   | Returns `{ iv, ct }` as base64                            |
-| `decryptData(key, iv, ct)`                | Returns the parsed JSON object                            |
-| `serializeVault(format)`                  | Builds CSV or JSON text                                   |
-| `prepareVaultFromText(text, name, dirty)` | Parses a file into `pending`                              |
-| `unlockVault()`                           | Derives key, verifies, decrypts entries                   |
-| `persistSession()`                        | Debounced (300 ms) re-serialization into `sessionStorage` |
-| `lockVault(silent)`                       | Full memory wipe + navigate to welcome                    |
-| `lockVaultKeepFile()`                     | Wipe + immediately re-load same file into `pending`       |
+No network. No backend. No analytics.
 
 ---
 
-## Storage & Session
+## Key Functions
 
-| Key                | Storage          | Purpose                        |
-| ------------------ | ---------------- | ------------------------------ |
-| `umbra-theme`      | `localStorage`   | `"light"` or `"dark"`          |
-| `umbra-session-v1` | `sessionStorage` | `{ text, fileName, wasDirty }` |
+| Function                                  | Purpose                                                                                       |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `randomBytes(n)`                          | Cryptographically secure random bytes via `crypto.getRandomValues`.                           |
+| `bufToB64(buf)` / `b64ToBuf(b64)`         | Base64 encode/decode of `ArrayBuffer` / `Uint8Array`, chunked for large payloads.             |
+| `deriveKey(password, salt, iterations)`   | PBKDF2-SHA256 → AES-256-GCM key (non-extractable, `encrypt`/`decrypt` only).                  |
+| `encryptData(key, obj)`                   | Encrypts `JSON.stringify(obj)` with a fresh 12-byte IV. Returns `{ iv, ct }` as base64.       |
+| `decryptData(key, ivB64, ctB64)`          | Decrypts and `JSON.parse`s; throws on GCM auth failure.                                       |
+| `deriveFileMarker(saltB64)`               | `SHA-256("f1:" + salt)` → first 12 bytes → 24 hex chars. Per-vault format marker.             |
+| `csvEscape(value)`                        | RFC 4180 escaping for CSV output.                                                             |
+| `parseCSV(text)`                          | Quote-aware CSV parser producing an array of rows.                                            |
+| `buildCSV()`                              | Serializes the current vault as CSV (meta row + one row per entry).                           |
+| `buildJSON()`                             | Serializes the current vault as JSON (with `format`, `version`, `meta`, `entries`).           |
+| `serializeVault(format)`                  | Dispatches to `buildCSV` or `buildJSON`.                                                      |
+| `downloadText(text, filename, mime, ext)` | Saves via File System Access API when available; falls back to anchor download.               |
+| `passwordStrength(pw)`                    | 0–4 score used by the strength meter.                                                         |
+| `generatePassword(opts)`                  | Random password generator (length, charsets, min digits/symbols, avoid-ambiguous).            |
+| `generatePassphrase(opts)`                | Word-based passphrase generator.                                                              |
+| `generateUsername()`                      | Random word / plus-addressed email / catch-all email.                                         |
+| `createVault()`                           | Derives a new key + salt and opens the vault screen with an empty vault.                      |
+| `prepareVaultFromText(text, name, dirty)` | Parses a vault file (CSV or JSON) and moves to the unlock screen.                             |
+| `unlockVault()`                           | Verifies the master password against the verifier blob, then decrypts all entries.            |
+| `saveVault()` / `performSave(format)`     | Opens the format picker and downloads the encrypted vault.                                    |
+| `lockVault(silent)`                       | Clears all in-memory state and returns to the welcome screen (also clears `sessionStorage`).  |
+| `lockVaultKeepFile()`                     | Locks but keeps the loaded vault file (goes straight to the unlock screen for the same file). |
+| `changeMasterPassword()`                  | Generates a new salt + key and marks the vault dirty for re-encryption on the next download.  |
 
-**Why `sessionStorage`?** It survives a page refresh (so you don't have to re-open the file), but it's discarded when the tab closes. Since the blob is still **encrypted**, anyone reading the storage key without the master password learns nothing.
+---
 
-The session is:
+## UI Reference
 
-- Written on vault creation, unlock, rename, save, and every state mutation (debounced).
-- Cleared on logout and when the user cancels the file picker.
+| Element                          | Purpose                                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Theme toggle**                 | Top-right (welcome/unlock) or toolbar (vault). Persists in `localStorage`.                |
+| **Dropzone**                     | Drag & drop or click to load a vault file.                                                |
+| **Master password field**        | Eye toggle, quick-generate, full generator, copy.                                         |
+| **Strength bar**                 | Live feedback on password quality.                                                        |
+| **Search box**                   | Filters entries by title, username, URL, notes, and custom fields.                        |
+| **Select-all checkbox**          | Selects all _visible_ (filtered) entries.                                                 |
+| **Entry card**                   | Copy username, copy password, view, edit, delete; individual select checkbox on the left. |
+| **Entry detail modal**           | Reveals password on demand; per-field copy buttons; handles hidden custom fields.         |
+| **Selection bar**                | Appears when ≥1 entry is selected; offers Clear and Delete.                               |
+| **Add / Edit entry modal**       | Title, username, password, URL, notes, plus custom fields.                                |
+| **Add field modal**              | Choose one of four field types before adding to the entry.                                |
+| **Password generator modal**     | Two tabs: Random Password / Memorable Passphrase.                                         |
+| **Username generator modal**     | Three types: Random Word, Plus Addressed Email, Catch-All Email.                          |
+| **Rename vault modal**           | Changes the file name; extension selects CSV or JSON for the next download.               |
+| **Change master password modal** | New salt + key. Re-encrypts everything on the next download.                              |
+| **Save format modal**            | Pick CSV or JSON.                                                                         |
+| **Confirm modal**                | Replaces `window.confirm` with a themed dialog.                                           |
+| **Toast**                        | Bottom-center notifications for copy, save, delete, errors, etc.                          |
+
+---
+
+## Storage
+
+| Location             | What lives there                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| **In memory**        | Decrypted entries, the derived AES key, the current salt and iteration count. Cleared on lock/logout.  |
+| **`sessionStorage`** | An encrypted snapshot of the vault plus its file name and dirty flag — used to survive a page refresh. |
+| **`localStorage`**   | Only the theme preference under the key `umbra-theme`.                                                 |
+| **Your disk**        | The encrypted `.csv` / `.json` vault file you download.                                                |
+
+`sessionStorage` is scoped to the tab and wiped when the tab closes. `localStorage` never holds anything sensitive.
 
 ---
 
 ## Browser Requirements
 
-Umbra requires the **Web Crypto API** (`crypto.subtle`). It will refuse to start with a friendly alert if unavailable.
-
-Supported environments:
-
-- Modern Chrome, Edge, Firefox, Safari (recent versions).
-- Any HTTPS origin, `localhost`, or `file://` in most browsers.
-
-> Opening from `file://` works in Chrome/Edge/Firefox, but Safari may block the Web Crypto API in some configurations. Serving over HTTPS is the safest option.
-
-### File Save Behavior
-
-On browsers supporting the **File System Access API** (`showSaveFilePicker`), Umbra can detect when you press **Cancel** and will keep the vault marked as dirty. On other browsers, a plain anchor download is used, which cannot detect cancellation.
+- **Web Crypto API** (`crypto.subtle`) — mandatory. Umbra will refuse to run if it's missing.
+- **Secure context** — `https://`, `localhost`, or `file://` in some browsers. Opening `index.html` over `http://` on a remote host will disable `crypto.subtle`.
+- **Modern browser** — Chrome, Edge, Firefox, or Safari from the last few years.
+- Optional: **File System Access API** (`window.showSaveFilePicker`) for a better save experience. Umbra falls back to a standard anchor download when it's unavailable.
 
 ---
 
-## Limitations & Caveats
+## Limitations
 
-1. **No password recovery.** If you lose your master password, the vault is unrecoverable. Period.
-2. **No per-entry key rotation.** Changing the master password changes the key for **all** entries; re-download immediately.
-3. **No history / versioning.** Deletes and edits are permanent on save.
-4. **No metadata hiding.** The number of entries, their IDs, and timestamps are visible in the file even without the key.
-5. **Memory exposure.** While unlocked, plaintext credentials live in the JavaScript heap. Do not run untrusted extensions or scripts alongside Umbra.
-6. **Auto-lock is activity-based**, not visibility-based. Minimizing the tab does not reset the timer; if anything, closing it does.
-7. **The clipboard-clear timer** runs only while the tab is open. If you close the tab before 30 seconds, the clipboard content remains.
-8. **Session persistence in `sessionStorage`** means the encrypted blob is briefly written to disk (browser profile). It is still encrypted, but be aware.
+1. **No password recovery.** If you lose your master password, the vault is unrecoverable. There is no backdoor, no reset, no hint.
+2. **No sync, no sharing.** Umbra produces a file. How you move that file around is your responsibility.
+3. **PBKDF2 is CPU-bound.** 310,000 iterations on a slow device can take a noticeable moment. This is intentional — it slows down brute-force attempts.
+4. **Single vault at a time.** Opening a second vault replaces the first in memory.
+5. **No password history.** Editing an entry overwrites the previous value.
+6. **Clipboard clearing is best-effort.** The 30-second timer empties the clipboard, but the OS may have already cached the value.
+7. **Auto-lock is a UI convenience.** It does not defend against a compromised browser or a malicious extension.
+8. **Encrypted entries leak metadata.** The number of entries and their last-updated timestamps are visible in the file.
+9. **No backward compatibility.** Vault files written by earlier or non-conforming versions that don't match the current `SHA-256("f1:" + salt)` marker are rejected. There is no legacy marker and no migration path.
+
+---
+
+## Cheatsheet
+
+### Common tasks
+
+| Task                   | How                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------- |
+| Create a vault         | Welcome screen → enter master password twice → **Create encrypted vault**.        |
+| Open a vault           | Drag the `.csv` / `.json` file onto the dropzone, then enter the master password. |
+| Add an entry           | **Add** in the toolbar → fill the form → **Save entry**.                          |
+| Generate a password    | Key icon next to the password field, or the toolbar generator.                    |
+| Generate a passphrase  | Open the generator → **Memorable Passphrase** tab.                                |
+| Generate a username    | Person icon in the toolbar or next to the username field.                         |
+| Copy without revealing | Copy icon next to the password in the entry card.                                 |
+| Bulk delete            | Tick the checkbox on each entry → **Delete** in the floating bar.                 |
+| Rename the vault file  | Document icon in the toolbar.                                                     |
+| Change master password | Key icon in the toolbar → enter new password twice → **Change password**.         |
+| Download the vault     | Download icon in the toolbar → pick CSV or JSON.                                  |
+| Lock but keep the file | Closed-padlock icon in the toolbar → re-enter the master password.                |
+| Log out completely     | Arrow-right icon in the toolbar → confirm.                                        |
+
+### Keyboard
+
+| Key      | Action                          |
+| -------- | ------------------------------- |
+| `Enter`  | Submit the active form / unlock |
+| `Escape` | Close the top-most modal        |
 
 ---
 
 ## Glossary
 
-| Term                | Meaning                                                                                                                     |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Master password** | The single secret that unlocks the vault. Never stored.                                                                     |
-| **Salt**            | Random bytes added to the master password before PBKDF2 to prevent rainbow-table attacks. Stored plainly in the vault file. |
-| **PBKDF2**          | Password-Based Key Derivation Function 2 — deliberately slow, hardens against brute force.                                  |
-| **AES-256-GCM**     | Symmetric cipher with authentication — tampering is detectable.                                                             |
-| **IV**              | Initialization Vector — random, per-encryption, ensures identical plaintexts yield different ciphertexts.                   |
-| **Verifier**        | A tiny encrypted blob whose successful decryption proves the master password is correct.                                    |
-| **Zero-knowledge**  | The storing entity (in this case, you — the file itself) learns nothing about the plaintext.                                |
+| Term                | Meaning                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Master password** | The only secret you memorise. Never stored. All keys are derived from it.                                        |
+| **Salt**            | 16 random bytes stored in the vault. Ensures two vaults with the same password produce different keys.           |
+| **IV**              | 12-byte nonce, randomly generated per encryption. Prevents ciphertext reuse.                                     |
+| **Verifier**        | A small encrypted blob containing `{ v: 1, check: "9f4c2a1eb7d3" }`. Decrypts only with the correct key.         |
+| **Derived marker**  | `SHA-256("f1:" + salt)` truncated to 96 bits, hex-encoded. Written to the JSON `format` field. Unique per vault. |
+| **Entry**           | A single record: title, username, password, URL, notes, and any number of custom fields.                         |
+| **Custom field**    | An extra per-entry field of type `text`, `hidden`, `checkbox`, or `linked`.                                      |
+| **Dirty**           | Vault has in-memory changes not yet written to disk. The status pill turns amber.                                |
+| **Lock**            | Clears the derived key and decrypted entries from memory. The file is untouched.                                 |
+| **Auto-lock**       | Automatic lock after 5 minutes of inactivity (`AUTOLOCK_MS`).                                                    |
+| **Zero-knowledge**  | No party — not even the app itself — can decrypt your vault without the master password.                         |
 
 ---
 
-## Quick Reference Cheatsheet
-
-```text
-Create vault      → enter master password twice → Create encrypted vault
-Open vault        → drag & drop file → enter password → Unlock
-Save vault        → download icon → pick CSV or JSON
-Rename vault      → rename icon → edit name (extension = format)
-Change master pw  → change-password icon → set new pw → re-download
-Lock (stay on tab)→ lock-vault icon → enter pw to resume
-Log out           → log-out icon → confirmed → memory wiped
-Auto-lock         → 5 minutes of inactivity
-Copy clears in    → 30 seconds
-```
-
----
-
-_Umbra is a small, self-contained tool. Read the source — it's right there in the single HTML file — and audit the crypto before trusting it with your secrets._
+_Umbra is a single HTML file. Save it, open it, and your vault is wherever you put it._
